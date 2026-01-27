@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + ColorThief UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.01.27.2108
+// @version      2026.01.27.2113
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -16,8 +16,8 @@
 // @connect      127.0.0.1
 // @connect      api.quotable.io
 // @run-at       document-start
-// @updateURL   https://github.com/Kovinda/Userscripts/raw/refs/heads/main/chatgpt.user.js
-// @downloadURL https://github.com/Kovinda/Userscripts/raw/refs/heads/main/chatgpt.user.js
+// @updateURL    https://raw.githubusercontent.com/Kovinda/Userscripts/main/chatgpt.user.js
+// @downloadURL  https://raw.githubusercontent.com/Kovinda/Userscripts/main/chatgpt.user.js
 // ==/UserScript==
 
 (function() {
