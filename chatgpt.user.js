@@ -14,6 +14,8 @@
 // @connect      127.0.0.1
 // @connect      api.quotable.io
 // @run-at       document-start
+// @updateURL   https://github.com/Kovinda/Userscripts/raw/refs/heads/main/chatgpt.user.js
+// @downloadURL https://github.com/Kovinda/Userscripts/raw/refs/heads/main/chatgpt.user.js
 // ==/UserScript==
 
 (function() {
