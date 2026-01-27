@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + ColorThief UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.01.27.2113
+// @version      2026.01.27.2116
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -192,7 +192,8 @@
                         content: "";
                         position: fixed;
                         top: 0; left: 0; right: 0; bottom: 0;
-                        z-index: -1;
+                        /* keep the background strictly behind UI */
+                        z-index: -9999;
                         display: block;
                         background-image: url('${dataUrl}');
                         background-size: cover;
@@ -200,6 +201,9 @@
                         width: 100%; height: 100%;
                         filter: brightness(50%);
                         ${preset.initial}
+                        /* hint to browser to optimize clip-path animation */
+                        will-change: clip-path, transform;
+                        backface-visibility: hidden;
                         animation: bgReveal ${ANIMATION_DURATION} ${ANIMATION_EASING} forwards;
                         pointer-events: none;
                     }
@@ -509,13 +513,15 @@
             border: 1px solid rgba(255,255,255,0.15);
             color: #fff;
             cursor: pointer;
-            z-index: 10000;
+            /* ensure this is always on top of animated background */
+            z-index: 2147483647 !important;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
             font-size: 20px;
+            transform: translateZ(0);
         }
         .tm-settings-btn:hover {
             background: rgba(50, 50, 50, 0.95);
@@ -531,7 +537,8 @@
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
             padding: 20px;
-            z-index: 10000;
+            /* ensure panel sits above animated background */
+            z-index: 2147483647 !important;
             backdrop-filter: blur(20px);
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             transform: translateY(20px);
