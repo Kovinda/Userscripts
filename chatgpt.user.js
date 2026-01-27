@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2.5
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
-// @author       Your Name
+// @author       Kovinda
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
 // @match        https://chatgpt.com/c/*
@@ -11,6 +11,8 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @connect      127.0.0.1
 // @connect      api.quotable.io
 // @run-at       document-start
@@ -22,8 +24,155 @@
     'use strict';
 
     // =================================================================
+    // SETTINGS STORAGE & DEFAULTS
+    // =================================================================
+
+    const DEFAULT_SETTINGS = {
+        animation: "sweepDown",
+        duration: "1.5",
+        easing: "ease-out"
+    };
+
+    const ANIMATION_OPTIONS = [
+        { value: "sweepDown", label: "Sweep Down", desc: "Reveals from top to bottom" },
+        { value: "sweepUp", label: "Sweep Up", desc: "Reveals from bottom to top" },
+        { value: "sweepLeft", label: "Sweep Left", desc: "Reveals from right to left" },
+        { value: "sweepRight", label: "Sweep Right", desc: "Reveals from left to right" },
+        { value: "fadeIn", label: "Fade In", desc: "Simple fade in" },
+        { value: "zoomIn", label: "Zoom In", desc: "Zooms in from center" },
+        { value: "zoomOut", label: "Zoom Out", desc: "Zooms out to normal size" },
+        { value: "blur", label: "Blur", desc: "Starts blurry, becomes clear" },
+        { value: "diagonalTL", label: "Diagonal TL", desc: "Diagonal reveal from top-left" },
+        { value: "diagonalBR", label: "Diagonal BR", desc: "Diagonal reveal from bottom-right" },
+        { value: "circleOut", label: "Circle Out", desc: "Circle expanding from center" },
+        { value: "blinds", label: "Blinds", desc: "Venetian blinds effect" }
+    ];
+
+    const EASING_OPTIONS = [
+        { value: "ease", label: "Ease" },
+        { value: "ease-in", label: "Ease In" },
+        { value: "ease-out", label: "Ease Out" },
+        { value: "ease-in-out", label: "Ease In-Out" },
+        { value: "linear", label: "Linear" }
+    ];
+
+    // Load saved settings or use defaults
+    let settings = Object.assign({}, DEFAULT_SETTINGS, GM_getValue('bgSettings', {}));
+
+    function saveSettings() {
+        GM_setValue('bgSettings', settings);
+    }
+
+    // Active configuration (derived from settings)
+    const BACKGROUND_ANIMATION = settings.animation;
+    const ANIMATION_DURATION = settings.duration + "s";
+    const ANIMATION_EASING = settings.easing;
+
+    // =================================================================
     // PART 1: Background, Sweep & Dynamic Color Extraction
     // =================================================================
+
+    const animationPresets = {
+        sweepDown: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: inset(0 0 100% 0); }
+                    100% { clip-path: inset(0 0 0 0); }
+                }`,
+            initial: ""
+        },
+        sweepUp: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: inset(100% 0 0 0); }
+                    100% { clip-path: inset(0 0 0 0); }
+                }`,
+            initial: ""
+        },
+        sweepLeft: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: inset(0 0 0 100%); }
+                    100% { clip-path: inset(0 0 0 0); }
+                }`,
+            initial: ""
+        },
+        sweepRight: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: inset(0 100% 0 0); }
+                    100% { clip-path: inset(0 0 0 0); }
+                }`,
+            initial: ""
+        },
+        fadeIn: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { opacity: 0; }
+                    100% { opacity: 1; }
+                }`,
+            initial: ""
+        },
+        zoomIn: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { transform: scale(0.5); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }`,
+            initial: ""
+        },
+        zoomOut: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { transform: scale(1.5); opacity: 0; }
+                    100% { transform: scale(1); opacity: 1; }
+                }`,
+            initial: ""
+        },
+        blur: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { filter: blur(30px) brightness(50%); opacity: 0; }
+                    100% { filter: blur(0px) brightness(50%); opacity: 1; }
+                }`,
+            initial: "filter: blur(0px) brightness(50%);"
+        },
+        diagonalTL: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: polygon(0 0, 0 0, 0 0); }
+                    100% { clip-path: polygon(0 0, 200% 0, 0 200%); }
+                }`,
+            initial: ""
+        },
+        diagonalBR: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: polygon(100% 100%, 100% 100%, 100% 100%); }
+                    100% { clip-path: polygon(100% 100%, -100% 100%, 100% -100%); }
+                }`,
+            initial: ""
+        },
+        circleOut: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: circle(0% at 50% 50%); }
+                    100% { clip-path: circle(150% at 50% 50%); }
+                }`,
+            initial: ""
+        },
+        blinds: {
+            keyframes: `
+                @keyframes bgReveal {
+                    0% { clip-path: inset(0 0 0 0 round 0); opacity: 0;
+                         background-size: 100% 10%; }
+                    50% { opacity: 0.5; }
+                    100% { clip-path: inset(0 0 0 0 round 0); opacity: 1;
+                           background-size: cover; }
+                }`,
+            initial: ""
+        }
+    };
 
     const imageUrl = `http://127.0.0.1:8190/ActiveBackground.jpg?rand=${Math.random()}`;
 
@@ -35,12 +184,10 @@
             const reader = new FileReader();
             reader.onloadend = function() {
                 const dataUrl = reader.result;
+                const preset = animationPresets[BACKGROUND_ANIMATION] || animationPresets.sweepDown;
 
                 GM_addStyle(`
-                    @keyframes sweepDown {
-                        0% { clip-path: inset(0 0 100% 0); }
-                        100% { clip-path: inset(0 0 0 0); }
-                    }
+                    ${preset.keyframes}
                     body::before {
                         content: "";
                         position: fixed;
@@ -52,7 +199,8 @@
                         background-position: center;
                         width: 100%; height: 100%;
                         filter: brightness(50%);
-                        animation: sweepDown 1.5s ease-out forwards;
+                        ${preset.initial}
+                        animation: bgReveal ${ANIMATION_DURATION} ${ANIMATION_EASING} forwards;
                         pointer-events: none;
                     }
                 `);
@@ -346,7 +494,233 @@
     }
 
     // =================================================================
-    // PART 5: Main Observer
+    // PART 5: Settings UI Panel
+    // =================================================================
+
+    GM_addStyle(`
+        .tm-settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(30, 30, 30, 0.85);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+        .tm-settings-btn:hover {
+            background: rgba(50, 50, 50, 0.95);
+            transform: scale(1.1) rotate(30deg);
+            box-shadow: 0 0 15px rgba(0,255,65,0.3);
+        }
+        .tm-settings-panel {
+            position: fixed;
+            bottom: 75px;
+            right: 20px;
+            width: 300px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 10000;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .tm-settings-panel.open {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        .tm-settings-panel h3 {
+            margin: 0 0 16px 0;
+            color: #00ff41;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tm-settings-group {
+            margin-bottom: 16px;
+        }
+        .tm-settings-group label {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tm-settings-group select,
+        .tm-settings-group input[type="range"] {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tm-settings-group select:hover,
+        .tm-settings-group select:focus {
+            border-color: #00ff41;
+            outline: none;
+            background: rgba(0,255,65,0.05);
+        }
+        .tm-settings-group select option {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 8px;
+        }
+        .tm-settings-group input[type="range"] {
+            padding: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+        .tm-settings-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ff41;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+        .tm-range-value {
+            text-align: right;
+            color: #00ff41;
+            font-size: 12px;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+        .tm-preview-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tm-preview-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,255,65,0.4);
+        }
+        .tm-settings-note {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            text-align: center;
+        }
+    `);
+
+    function createSettingsUI() {
+        // Settings toggle button
+        const btn = document.createElement('button');
+        btn.className = 'tm-settings-btn';
+        btn.innerHTML = '⚙';
+        btn.title = 'Background Settings';
+
+        // Settings panel
+        const panel = document.createElement('div');
+        panel.className = 'tm-settings-panel';
+        panel.innerHTML = `
+            <h3>⚡ Background Animation</h3>
+            <div class="tm-settings-group">
+                <label>Animation Style</label>
+                <select id="tm-anim-select">
+                    ${ANIMATION_OPTIONS.map(opt => 
+                        `<option value="${opt.value}" ${settings.animation === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <div class="tm-settings-group">
+                <label>Duration</label>
+                <input type="range" id="tm-duration-slider" min="0.3" max="5" step="0.1" value="${settings.duration}">
+                <div class="tm-range-value" id="tm-duration-value">${settings.duration}s</div>
+            </div>
+            <div class="tm-settings-group">
+                <label>Easing</label>
+                <select id="tm-easing-select">
+                    ${EASING_OPTIONS.map(opt => 
+                        `<option value="${opt.value}" ${settings.easing === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <button class="tm-preview-btn" id="tm-preview-btn">Preview & Apply</button>
+            <div class="tm-settings-note">Changes are saved automatically</div>
+        `;
+
+        document.body.appendChild(btn);
+        document.body.appendChild(panel);
+
+        // Toggle panel
+        btn.addEventListener('click', () => {
+            panel.classList.toggle('open');
+        });
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        // Animation select
+        const animSelect = panel.querySelector('#tm-anim-select');
+        animSelect.addEventListener('change', (e) => {
+            settings.animation = e.target.value;
+            saveSettings();
+        });
+
+        // Duration slider
+        const durationSlider = panel.querySelector('#tm-duration-slider');
+        const durationValue = panel.querySelector('#tm-duration-value');
+        durationSlider.addEventListener('input', (e) => {
+            settings.duration = e.target.value;
+            durationValue.textContent = e.target.value + 's';
+            saveSettings();
+        });
+
+        // Easing select
+        const easingSelect = panel.querySelector('#tm-easing-select');
+        easingSelect.addEventListener('change', (e) => {
+            settings.easing = e.target.value;
+            saveSettings();
+        });
+
+        // Preview button - reloads to show new animation
+        const previewBtn = panel.querySelector('#tm-preview-btn');
+        previewBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+
+    // =================================================================
+    // PART 6: Main Observer
     // =================================================================
 
     const observer = new MutationObserver((mutations) => {
@@ -358,5 +732,12 @@
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Initialize settings UI when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createSettingsUI);
+    } else {
+        createSettingsUI();
+    }
 
 })();
