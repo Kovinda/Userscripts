@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + ColorThief UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.01.29.0025
+// @version      2026.01.29.0038
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -294,45 +294,6 @@
                 background: linear-gradient(180deg, ${hex2}, ${hex1}) !important;
             }
             
-            /* ===== TEXT SELECTION ===== */
-            ::selection {
-                background: ${p.rgba(p.colors[0], 0.4)} !important;
-                color: ${textColor1} !important;
-            }
-            ::-moz-selection {
-                background: ${p.rgba(p.colors[0], 0.4)} !important;
-                color: ${textColor1} !important;
-            }
-            
-            /* ===== FOCUS RINGS ===== */
-            textarea:focus,
-            [contenteditable]:focus,
-            input:focus {
-                box-shadow: 0 0 0 2px ${p.rgba(p.colors[0], 0.4)}, 0 0 20px ${p.rgba(p.colors[1] || p.colors[0], 0.2)} !important;
-                border-color: ${hex1} !important;
-                outline: none !important;
-            }
-            
-            /* ===== LINKS ===== */
-            a:not([class*="btn"]):not(button):hover {
-                color: ${hex2} !important;
-                text-shadow: 0 0 8px ${p.rgba(p.colors[1] || p.colors[0], 0.5)};
-            }
-            
-            /* ===== USER MESSAGE ACCENT ===== */
-            [data-message-author-role="user"] {
-                border-left: 3px solid ${hex1} !important;
-                box-shadow: inset 4px 0 20px ${p.rgba(p.colors[0], 0.15)} !important;
-            }
-            
-            /* ===== ASSISTANT MESSAGE CODE BLOCKS ===== */
-            [data-message-author-role="assistant"] pre {
-                border-left: 3px solid ${hex2} !important;
-            }
-            [data-message-author-role="assistant"] pre > div:first-child {
-                background: linear-gradient(90deg, ${p.rgba(p.colors[1] || p.colors[0], 0.3)}, transparent) !important;
-            }
-            
             /* ===== SUBMIT BUTTON ===== */
             .composer-submit-button-color,
             button[data-testid="send-button"],
@@ -355,26 +316,6 @@
                 color: ${textColor1} !important;
             }
             
-            /* ===== INPUT CONTAINER BORDER ===== */
-            #thread-bottom .bg-token-bg-primary,
-            #composer-background,
-            [class*="composer"] > div:first-child {
-                border: 1px solid ${p.rgba(p.colors[0], 0.3)} !important;
-                box-shadow: 0 0 30px ${p.rgba(p.colors[0], 0.1)} !important;
-            }
-            
-            /* ===== SIDEBAR ACTIVE ITEM ===== */
-            nav a[class*="bg-token-sidebar"],
-            nav li[class*="bg-token-sidebar"] {
-                background: linear-gradient(90deg, ${p.rgba(p.colors[0], 0.2)}, transparent) !important;
-                border-left: 2px solid ${hex1} !important;
-            }
-            
-            /* ===== BUTTONS HOVER (General) ===== */
-            button:not(.tm-settings-btn):not(.tm-preview-btn):hover {
-                box-shadow: 0 0 10px ${p.rgba(p.colors[0], 0.2)};
-            }
-            
             /* ===== MODEL SELECTOR ===== */
             button[aria-label*="Model"] {
                 border: 1px solid transparent !important;
@@ -383,17 +324,6 @@
             button[aria-label*="Model"]:hover {
                 border-color: ${hex1} !important;
                 box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.3)} !important;
-            }
-            
-            /* ===== QUOTE STYLING ===== */
-            .tm-custom-quote {
-                text-shadow: 0 0 30px ${p.rgba(p.colors[0], 0.3)};
-            }
-            .tm-custom-quote span:first-child {
-                background: linear-gradient(90deg, ${hex1}, ${hex2}, ${hex3}) !important;
-                -webkit-background-clip: text !important;
-                -webkit-text-fill-color: transparent !important;
-                background-clip: text !important;
             }
             
             /* ===== SETTINGS PANEL ACCENT ===== */
@@ -419,29 +349,6 @@
             .tm-settings-btn:hover {
                 box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.5)} !important;
             }
-            
-            /* ===== GLITCH TEXT COLOR ===== */
-            .glitch-target {
-                color: ${hex1} !important;
-            }
-            .glitch-target::before {
-                text-shadow: -1px 0 ${hex2} !important;
-            }
-            .glitch-target::after {
-                text-shadow: -1px 0 ${hex3} !important;
-            }
-            
-            /* ===== LOADING/THINKING DOTS ===== */
-            [class*="result-thinking"] span,
-            [class*="streaming"] {
-                color: ${hex1} !important;
-            }
-            
-            /* ===== CODE SYNTAX HIGHLIGHTING ACCENTS ===== */
-            .hljs-keyword, .token.keyword { color: ${hex1} !important; }
-            .hljs-string, .token.string { color: ${hex2} !important; }
-            .hljs-function, .token.function { color: ${hex3} !important; }
-            .hljs-comment, .token.comment { color: ${p.rgba(p.colors[4] || p.colors[0], 0.7)} !important; }
         `;
         
         accentStyleElement = document.createElement('style');
