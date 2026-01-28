@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + ColorThief UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.01.27.2116
+// @version      2026.01.29.0025
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -30,7 +30,8 @@
     const DEFAULT_SETTINGS = {
         animation: "sweepDown",
         duration: "1.5",
-        easing: "ease-out"
+        easing: "ease-out",
+        accentMode: true  // Toggle for accent colors from wallpaper
     };
 
     const ANIMATION_OPTIONS = [
@@ -214,27 +215,38 @@
                     img.onload = function() {
                         try {
                             const colorThief = new ColorThief();
-                            const rgb = colorThief.getColor(img);
-                            if (rgb) {
-                                const hex = "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
-                                const yiq = ((rgb[0]*299)+(rgb[1]*587)+(rgb[2]*114))/1000;
-                                const textColor = (yiq >= 128) ? 'black' : 'white';
-
-                                GM_addStyle(`
-                                    .composer-submit-button-color {
-                                        background-color: ${hex} !important;
-                                        color: ${textColor} !important;
-                                        border: 1px solid ${hex} !important;
-                                        transition: background-color 0.5s ease;
-                                    }
-                                    .composer-submit-button-color:hover {
-                                        box-shadow: 0 0 10px ${hex};
-                                        filter: brightness(1.2);
-                                    }
-                                    .composer-submit-button-color svg {
-                                        color: ${textColor} !important;
-                                    }
-                                `);
+                            // Get full palette (up to 8 colors)
+                            const palette = colorThief.getPalette(img, 6);
+                            const primary = colorThief.getColor(img);
+                            
+                            if (palette && palette.length > 0) {
+                                // Store palette globally for use elsewhere
+                                window.tmPalette = {
+                                    primary: primary,
+                                    colors: palette,
+                                    hex: palette.map(rgb => "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)),
+                                    rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
+                                };
+                                
+                                const p = window.tmPalette;
+                                const hex1 = p.hex[0]; // Primary
+                                const hex2 = p.hex[1] || p.hex[0]; // Secondary
+                                const hex3 = p.hex[2] || p.hex[0]; // Tertiary
+                                const hex4 = p.hex[3] || p.hex[1] || p.hex[0]; // Accent 4
+                                const hex5 = p.hex[4] || p.hex[2] || p.hex[0]; // Accent 5
+                                
+                                // Calculate text colors for each
+                                const getTextColor = (rgb) => {
+                                    const yiq = ((rgb[0]*299)+(rgb[1]*587)+(rgb[2]*114))/1000;
+                                    return (yiq >= 128) ? 'black' : 'white';
+                                };
+                                const textColor1 = getTextColor(palette[0]);
+                                const textColor2 = getTextColor(palette[1] || palette[0]);
+                                
+                                // Only apply accent styles if enabled
+                                if (settings.accentMode) {
+                                    applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
+                                }
                             }
                         } catch (e) {
                             console.error("[Tampermonkey] ColorThief processing failed:", e);
@@ -249,6 +261,203 @@
             console.log('Background image server not found (ignoring).');
         }
     });
+
+    // =================================================================
+    // ACCENT STYLES FUNCTION
+    // =================================================================
+    
+    let accentStyleElement = null;
+    
+    function applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2) {
+        // Remove existing accent styles if any
+        if (accentStyleElement) {
+            accentStyleElement.remove();
+        }
+        
+        const accentCSS = `
+            /* ===== SCROLLBAR ===== */
+            ::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+            ::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 5px;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, ${hex1}, ${hex2}) !important;
+                border-radius: 5px;
+                border: 2px solid transparent;
+                background-clip: padding-box;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(180deg, ${hex2}, ${hex1}) !important;
+            }
+            
+            /* ===== TEXT SELECTION ===== */
+            ::selection {
+                background: ${p.rgba(p.colors[0], 0.4)} !important;
+                color: ${textColor1} !important;
+            }
+            ::-moz-selection {
+                background: ${p.rgba(p.colors[0], 0.4)} !important;
+                color: ${textColor1} !important;
+            }
+            
+            /* ===== FOCUS RINGS ===== */
+            textarea:focus,
+            [contenteditable]:focus,
+            input:focus {
+                box-shadow: 0 0 0 2px ${p.rgba(p.colors[0], 0.4)}, 0 0 20px ${p.rgba(p.colors[1] || p.colors[0], 0.2)} !important;
+                border-color: ${hex1} !important;
+                outline: none !important;
+            }
+            
+            /* ===== LINKS ===== */
+            a:not([class*="btn"]):not(button):hover {
+                color: ${hex2} !important;
+                text-shadow: 0 0 8px ${p.rgba(p.colors[1] || p.colors[0], 0.5)};
+            }
+            
+            /* ===== USER MESSAGE ACCENT ===== */
+            [data-message-author-role="user"] {
+                border-left: 3px solid ${hex1} !important;
+                box-shadow: inset 4px 0 20px ${p.rgba(p.colors[0], 0.15)} !important;
+            }
+            
+            /* ===== ASSISTANT MESSAGE CODE BLOCKS ===== */
+            [data-message-author-role="assistant"] pre {
+                border-left: 3px solid ${hex2} !important;
+            }
+            [data-message-author-role="assistant"] pre > div:first-child {
+                background: linear-gradient(90deg, ${p.rgba(p.colors[1] || p.colors[0], 0.3)}, transparent) !important;
+            }
+            
+            /* ===== SUBMIT BUTTON ===== */
+            .composer-submit-button-color,
+            button[data-testid="send-button"],
+            button[data-testid="composer-send-button"] {
+                background: linear-gradient(135deg, ${hex1}, ${hex2}) !important;
+                color: ${textColor1} !important;
+                border: none !important;
+                transition: all 0.3s ease;
+            }
+            .composer-submit-button-color:hover,
+            button[data-testid="send-button"]:hover,
+            button[data-testid="composer-send-button"]:hover {
+                box-shadow: 0 0 20px ${p.rgba(p.colors[0], 0.6)}, 0 0 40px ${p.rgba(p.colors[1] || p.colors[0], 0.3)} !important;
+                filter: brightness(1.1);
+                transform: scale(1.05);
+            }
+            .composer-submit-button-color svg,
+            button[data-testid="send-button"] svg,
+            button[data-testid="composer-send-button"] svg {
+                color: ${textColor1} !important;
+            }
+            
+            /* ===== INPUT CONTAINER BORDER ===== */
+            #thread-bottom .bg-token-bg-primary,
+            #composer-background,
+            [class*="composer"] > div:first-child {
+                border: 1px solid ${p.rgba(p.colors[0], 0.3)} !important;
+                box-shadow: 0 0 30px ${p.rgba(p.colors[0], 0.1)} !important;
+            }
+            
+            /* ===== SIDEBAR ACTIVE ITEM ===== */
+            nav a[class*="bg-token-sidebar"],
+            nav li[class*="bg-token-sidebar"] {
+                background: linear-gradient(90deg, ${p.rgba(p.colors[0], 0.2)}, transparent) !important;
+                border-left: 2px solid ${hex1} !important;
+            }
+            
+            /* ===== BUTTONS HOVER (General) ===== */
+            button:not(.tm-settings-btn):not(.tm-preview-btn):hover {
+                box-shadow: 0 0 10px ${p.rgba(p.colors[0], 0.2)};
+            }
+            
+            /* ===== MODEL SELECTOR ===== */
+            button[aria-label*="Model"] {
+                border: 1px solid transparent !important;
+                transition: all 0.3s ease;
+            }
+            button[aria-label*="Model"]:hover {
+                border-color: ${hex1} !important;
+                box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.3)} !important;
+            }
+            
+            /* ===== QUOTE STYLING ===== */
+            .tm-custom-quote {
+                text-shadow: 0 0 30px ${p.rgba(p.colors[0], 0.3)};
+            }
+            .tm-custom-quote span:first-child {
+                background: linear-gradient(90deg, ${hex1}, ${hex2}, ${hex3}) !important;
+                -webkit-background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+                background-clip: text !important;
+            }
+            
+            /* ===== SETTINGS PANEL ACCENT ===== */
+            .tm-settings-panel h3 {
+                color: ${hex1} !important;
+            }
+            .tm-settings-panel select:focus,
+            .tm-settings-panel select:hover {
+                border-color: ${hex1} !important;
+                background: ${p.rgba(p.colors[0], 0.1)} !important;
+            }
+            .tm-settings-group input[type="range"]::-webkit-slider-thumb {
+                background: ${hex1} !important;
+                box-shadow: 0 0 10px ${p.rgba(p.colors[0], 0.5)} !important;
+            }
+            .tm-preview-btn {
+                background: linear-gradient(135deg, ${hex1}, ${hex2}) !important;
+                color: ${textColor1} !important;
+            }
+            .tm-preview-btn:hover {
+                box-shadow: 0 5px 20px ${p.rgba(p.colors[0], 0.4)} !important;
+            }
+            .tm-settings-btn:hover {
+                box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.5)} !important;
+            }
+            
+            /* ===== GLITCH TEXT COLOR ===== */
+            .glitch-target {
+                color: ${hex1} !important;
+            }
+            .glitch-target::before {
+                text-shadow: -1px 0 ${hex2} !important;
+            }
+            .glitch-target::after {
+                text-shadow: -1px 0 ${hex3} !important;
+            }
+            
+            /* ===== LOADING/THINKING DOTS ===== */
+            [class*="result-thinking"] span,
+            [class*="streaming"] {
+                color: ${hex1} !important;
+            }
+            
+            /* ===== CODE SYNTAX HIGHLIGHTING ACCENTS ===== */
+            .hljs-keyword, .token.keyword { color: ${hex1} !important; }
+            .hljs-string, .token.string { color: ${hex2} !important; }
+            .hljs-function, .token.function { color: ${hex3} !important; }
+            .hljs-comment, .token.comment { color: ${p.rgba(p.colors[4] || p.colors[0], 0.7)} !important; }
+        `;
+        
+        accentStyleElement = document.createElement('style');
+        accentStyleElement.id = 'tm-accent-styles';
+        accentStyleElement.textContent = accentCSS;
+        document.head.appendChild(accentStyleElement);
+    }
+    
+    function removeAccentStyles() {
+        if (accentStyleElement) {
+            accentStyleElement.remove();
+            accentStyleElement = null;
+        }
+        const existing = document.getElementById('tm-accent-styles');
+        if (existing) existing.remove();
+    }
 
     // =================================================================
     // PART 2: UI Transparency
@@ -642,6 +851,43 @@
             font-size: 11px;
             text-align: center;
         }
+        /* Toggle Switch */
+        .tm-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .tm-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .tm-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        .tm-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        .tm-toggle input:checked + .tm-toggle-slider {
+            background: linear-gradient(135deg, #00ff41, #00cc33);
+        }
+        .tm-toggle input:checked + .tm-toggle-slider:before {
+            transform: translateX(20px);
+        }
     `);
 
     function createSettingsUI() {
@@ -676,6 +922,19 @@
                         `<option value="${opt.value}" ${settings.easing === opt.value ? 'selected' : ''}>${opt.label}</option>`
                     ).join('')}
                 </select>
+            </div>
+            <div class="tm-settings-group">
+                <label>Accent Colors</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="tm-toggle">
+                        <input type="checkbox" id="tm-accent-toggle" ${settings.accentMode ? 'checked' : ''}>
+                        <span class="tm-toggle-slider"></span>
+                    </label>
+                    <span style="color: rgba(255,255,255,0.6); font-size: 12px;" id="tm-accent-label">
+                        ${settings.accentMode ? 'Wallpaper Palette' : 'Original Colors'}
+                    </span>
+                </div>
+                <div id="tm-palette-preview" style="display: flex; gap: 4px; margin-top: 8px; height: 20px;"></div>
             </div>
             <button class="tm-preview-btn" id="tm-preview-btn">Preview & Apply</button>
             <div class="tm-settings-note">Changes are saved automatically</div>
@@ -717,6 +976,47 @@
         easingSelect.addEventListener('change', (e) => {
             settings.easing = e.target.value;
             saveSettings();
+        });
+
+        // Accent toggle
+        const accentToggle = panel.querySelector('#tm-accent-toggle');
+        const accentLabel = panel.querySelector('#tm-accent-label');
+        const palettePreview = panel.querySelector('#tm-palette-preview');
+        
+        // Show palette preview
+        function updatePalettePreview() {
+            if (window.tmPalette && window.tmPalette.hex) {
+                palettePreview.innerHTML = window.tmPalette.hex.map((color, i) => 
+                    `<div style="flex:1; background:${color}; border-radius:4px; transition: transform 0.2s;" 
+                         title="Color ${i+1}: ${color}"
+                         onmouseover="this.style.transform='scaleY(1.5)'"
+                         onmouseout="this.style.transform='scaleY(1)'"></div>`
+                ).join('');
+            } else {
+                palettePreview.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:11px;">No wallpaper palette detected</span>';
+            }
+        }
+        setTimeout(updatePalettePreview, 1000); // Wait for palette extraction
+        
+        accentToggle.addEventListener('change', (e) => {
+            settings.accentMode = e.target.checked;
+            accentLabel.textContent = e.target.checked ? 'Wallpaper Palette' : 'Original Colors';
+            saveSettings();
+            
+            if (e.target.checked && window.tmPalette) {
+                const p = window.tmPalette;
+                const getTextColor = (rgb) => {
+                    const yiq = ((rgb[0]*299)+(rgb[1]*587)+(rgb[2]*114))/1000;
+                    return (yiq >= 128) ? 'black' : 'white';
+                };
+                applyAccentStyles(
+                    p, p.hex[0], p.hex[1] || p.hex[0], p.hex[2] || p.hex[0],
+                    p.hex[3] || p.hex[1] || p.hex[0], p.hex[4] || p.hex[2] || p.hex[0],
+                    getTextColor(p.colors[0]), getTextColor(p.colors[1] || p.colors[0])
+                );
+            } else {
+                removeAccentStyles();
+            }
         });
 
         // Preview button - reloads to show new animation
