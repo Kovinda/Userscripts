@@ -40,6 +40,7 @@
         const yiq = ((rgb[0] * 299) + (rgb[1] * 587) + (rgb[2] * 114)) / 1000;
         return yiq >= 128 ? 'black' : 'white';
     };
+    const darkenRgb = (rgb, amount) => rgb.map((c) => Math.max(0, Math.min(255, Math.round(c * (1 - amount)))));
 
     // --- 1. Background Animation Presets ---
     const ANIMATION_OPTIONS = [
@@ -174,11 +175,29 @@
             }
 
             #main-menu > .current {
-                background: transparent !important;
+                background: rgba(255, 255, 255, 0.28) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-bottom: none;
+                border-radius: 14px 14px 0 0;
+                padding: 6px 12px;
+                margin-bottom: 0;
+                box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+                backdrop-filter: blur(12px) saturate(140%);
+                -webkit-backdrop-filter: blur(12px) saturate(140%);
+                position: relative;
+                z-index: 2;
             }
 
             #subnav-menu {
-                background: transparent !important;
+                background: rgba(255, 255, 255, 0.28) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-top: none;
+                border-radius: 0 0 14px 14px;
+                padding: 8px 12px;
+                margin-top: 0;
+                box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+                backdrop-filter: blur(12px) saturate(140%);
+                -webkit-backdrop-filter: blur(12px) saturate(140%);
             }
 
             #page-footer {
@@ -260,7 +279,7 @@
 
     let accentStyleElement = null;
 
-    const applyAccentStyles = (p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2) => {
+    const applyAccentStyles = (p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2, darkTextHex) => {
         if (accentStyleElement) {
             accentStyleElement.remove();
         }
@@ -316,6 +335,18 @@
             #db-fab:hover {
                 box-shadow: 0 0 14px ${p.rgba(p.colors[0], 0.4)};
             }
+
+            #main-menu > .current,
+            #main-menu > .current a,
+            #main-menu > .current span {
+                color: ${hex1};
+            }
+
+            #subnav-menu,
+            #subnav-menu a,
+            #subnav-menu span {
+                color: ${darkTextHex};
+            }
         `;
 
         accentStyleElement = document.createElement('style');
@@ -347,8 +378,9 @@
         const hex5 = p.hex[4] || p.hex[2] || p.hex[0];
         const textColor1 = primarySwatch?.titleTextColor || primarySwatch?.bodyTextColor || getTextColor(p.colors[0]);
         const textColor2 = secondarySwatch?.titleTextColor || secondarySwatch?.bodyTextColor || getTextColor(p.colors[1] || p.colors[0]);
+        const darkTextHex = rgbToHex(darkenRgb(p.colors[0], 0.6));
 
-        applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
+        applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2, darkTextHex);
     };
 
     const ensureVibrant = () => {
