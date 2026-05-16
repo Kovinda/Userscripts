@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0010
+// @version      2026.05.16.0013
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -422,23 +422,41 @@
             -webkit-backdrop-filter: blur(25px);
             backdrop-filter: blur(25px);
         }
-        #page-header {
+        [class*="bg-(--sidebar-surface-primary)"] {
+            background-color: transparent !important;
+        }
+        #page-header, #stage-slideover-sidebar .sticky.top-0 {
             background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
         }
+        #stage-slideover-sidebar .z-30:not(.sticky) {
+            background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
+            backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
+            -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
+            border-top: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+        }
         #stage-slideover-sidebar {
             background-color: var(--tm-glass-bg, rgba(10,10,10, 0)) !important;
+            border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             -webkit-backdrop-filter: blur(5px);
             backdrop-filter: blur(5px);
         }
-        #thread-bottom .bg-token-bg-primary {
+        #thread-bottom [data-composer-surface="true"], #thread-bottom .bg-token-bg-primary {
             background-color: var(--tm-glass-bg, rgba(0, 0, 0, 0.4)) !important;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+            box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
+            border-radius: 28px !important;
+        }
+        #thread-bottom-container button[class*="bg-token-bg-primary"] {
+            background-color: var(--tm-glass-bg, rgba(10, 10, 10, 0.45)) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
         }
         .content-fade.single-line:after {
             background: transparent !important;
