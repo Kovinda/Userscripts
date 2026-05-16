@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + Vibrant UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0002
+// @version      2026.05.16.0004
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -195,16 +195,21 @@
                 --theme-submit-btn-bg: ${hex1};
                 --theme-submit-btn-text: ${textColor1};
                 --theme-user-selection-bg: ${selection};
+                --theme-user-msg-bg: ${selection};
+                --theme-user-msg-text: ${textColor1};
                 --theme-entity-accent: ${hex2};
                 --default-theme-submit-btn-bg: ${hex1};
                 --default-theme-submit-btn-text: ${textColor1};
                 --default-theme-user-selection-bg: ${selection};
+                --default-theme-user-msg-bg: ${selection};
+                --default-theme-user-msg-text: ${textColor1};
                 --default-theme-entity-accent: ${hex2};
             }
 
             :root,
             .puik-root,
-            .puik-root [data-theme] {
+            .puik-root [data-theme],
+            .dark {
                 --color-ring: ${hex2};
                 --color-ring-primary: ${hex2};
                 --color-ring-primary-soft: ${hex2};
@@ -231,6 +236,34 @@
                 --color-background-primary-ghost-active: ${ghostActive};
                 --color-text-primary-ghost: ${hex1};
                 --color-text-primary-ghost-hover: ${hex2};
+
+                /* Global Text & Accent Colors */
+                --text-primary: color-mix(in oklab, ${hex1} 20%, ${textColor1}) !important;
+                --text-secondary: color-mix(in oklab, ${hex2} 35%, ${textColor1}) !important;
+                --text-tertiary: color-mix(in oklab, ${hex2} 50%, ${textColor1}) !important;
+                --color-text: color-mix(in oklab, ${hex1} 20%, ${textColor1}) !important;
+                --color-text-primary: color-mix(in oklab, ${hex1} 20%, ${textColor1}) !important;
+                --color-text-secondary: color-mix(in oklab, ${hex2} 35%, ${textColor1}) !important;
+                --color-text-tertiary: color-mix(in oklab, ${hex2} 50%, ${textColor1}) !important;
+                --color-text-emphasis: color-mix(in oklab, ${hex1} 30%, ${textColor1}) !important;
+                --color-text-prose: color-mix(in oklab, ${hex1} 20%, ${textColor1}) !important;
+                --user-message-text-color: ${textColor1} !important;
+            }
+
+            /* ===== CHAT MESSAGES ===== */
+            [data-turn="user"] > div > div,
+            div[data-message-author-role="user"].text-message > div > div {
+                background: ${selection} !important;
+                color: ${textColor1} !important;
+                border: 1px solid ${outline} !important;
+                box-shadow: 0 4px 20px ${p.rgba(p.colors[0], 0.2)} !important;
+            }
+            [data-turn="assistant"] > div > div,
+            div[data-message-author-role="assistant"].text-message {
+                background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
+                color: var(--color-text-prose, color-mix(in oklab, ${hex1} 20%, ${textColor1})) !important;
+                border: 1px solid ${p.rgba(p.colors[1] || p.colors[0], 0.15)} !important;
+                box-shadow: 0 4px 25px rgba(0,0,0,0.3) !important;
             }
 
             /* ===== SCROLLBAR ===== */
@@ -354,18 +387,21 @@
             -webkit-backdrop-filter: blur(1px);
             backdrop-filter: blur(1px);
         }
+        [data-turn="user"] > div > div,
         div[data-message-author-role="user"].text-message > div > div {
             background-color: var(--tm-glass-strong-bg, rgba(0,10,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
         }
         div[role="presentation"] .h-full article > div > div { max-width: 65rem; }
+        [data-turn="assistant"] pre > div,
         div[data-message-author-role="assistant"].text-message pre > div {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
             margin-right: 1rem;
         }
+        [data-turn="assistant"] > div > div,
         div[data-message-author-role="assistant"].text-message {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
