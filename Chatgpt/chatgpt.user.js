@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + ColorThief UI
+// @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + Vibrant UI
 // @namespace    http://tampermonkey.net/
 // @version      2026.01.29.0048
-// @description  Background image, transparent UI, glitch loop, smart formatted quotes, and dynamic button colorings
+// @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
 // @match        https://chatgpt.com/c/*
 // @match        https://auth.openai.com/*
-// @require      https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js
+// @require      https://cdn.jsdelivr.net/npm/node-vibrant@latest/dist/vibrant.min.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
@@ -80,6 +80,61 @@
 
     // Load saved settings or use defaults
     let settings = Object.assign({}, DEFAULT_SETTINGS, GM_getValue('bgSettings', {}));
+
+    const getTextColor = (rgb) => {
+        const yiq = ((rgb[0] * 299) + (rgb[1] * 587) + (rgb[2] * 114)) / 1000;
+        return yiq >= 128 ? 'black' : 'white';
+    };
+
+    const parseCssRgb = (value) => {
+        if (!value) return null;
+        const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (!match) return null;
+        return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
+    };
+
+    let glassMode = null;
+
+    const setGlassVars = (mode) => {
+        if (glassMode === mode) return;
+        glassMode = mode;
+        const root = document.documentElement;
+
+        if (mode === 'dark') {
+            root.style.setProperty('--tm-glass-bg', 'rgba(10, 10, 10, 0.5)');
+            root.style.setProperty('--tm-glass-strong-bg', 'rgba(0, 0, 0, 0.6)');
+            root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.08)');
+            root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.35)');
+            root.style.setProperty('--tm-glass-filter', 'blur(12px) saturate(120%)');
+        } else {
+            root.style.setProperty('--tm-glass-bg', 'rgba(255, 255, 255, 0.35)');
+            root.style.setProperty('--tm-glass-strong-bg', 'rgba(255, 255, 255, 0.6)');
+            root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.35)');
+            root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.14)');
+            root.style.setProperty('--tm-glass-filter', 'blur(12px) saturate(140%)');
+        }
+    };
+
+    const updateGlassTone = () => {
+        const sample = document.querySelector('#page-header') || document.body;
+        if (!sample) return;
+        const color = window.getComputedStyle(sample).color;
+        const rgb = parseCssRgb(color);
+        if (!rgb) return;
+
+        const luminance = (rgb[0] * 0.299) + (rgb[1] * 0.587) + (rgb[2] * 0.114);
+        const isLightText = luminance >= 170;
+        setGlassVars(isLightText ? 'dark' : 'light');
+    };
+
+    let glassUpdateHandle = null;
+    const scheduleGlassToneUpdate = () => {
+        if (glassUpdateHandle) return;
+        glassUpdateHandle = window.setTimeout(() => {
+            glassUpdateHandle = null;
+            updateGlassTone();
+        }, 250);
+    };
 
     function saveSettings() {
         GM_setValue('bgSettings', settings);
@@ -611,50 +666,7 @@
                     }
                 `);
 
-                if (typeof ColorThief !== 'undefined') {
-                    const img = document.createElement('img');
-                    img.onload = function() {
-                        try {
-                            const colorThief = new ColorThief();
-                            // Get full palette (up to 8 colors)
-                            const palette = colorThief.getPalette(img, 6);
-                            const primary = colorThief.getColor(img);
-                            
-                            if (palette && palette.length > 0) {
-                                // Store palette globally for use elsewhere
-                                window.tmPalette = {
-                                    primary: primary,
-                                    colors: palette,
-                                    hex: palette.map(rgb => "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)),
-                                    rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
-                                };
-                                
-                                const p = window.tmPalette;
-                                const hex1 = p.hex[0]; // Primary
-                                const hex2 = p.hex[1] || p.hex[0]; // Secondary
-                                const hex3 = p.hex[2] || p.hex[0]; // Tertiary
-                                const hex4 = p.hex[3] || p.hex[1] || p.hex[0]; // Accent 4
-                                const hex5 = p.hex[4] || p.hex[2] || p.hex[0]; // Accent 5
-                                
-                                // Calculate text colors for each
-                                const getTextColor = (rgb) => {
-                                    const yiq = ((rgb[0]*299)+(rgb[1]*587)+(rgb[2]*114))/1000;
-                                    return (yiq >= 128) ? 'black' : 'white';
-                                };
-                                const textColor1 = getTextColor(palette[0]);
-                                const textColor2 = getTextColor(palette[1] || palette[0]);
-                                
-                                // Only apply accent styles if enabled
-                                if (settings.accentMode) {
-                                    applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
-                                }
-                            }
-                        } catch (e) {
-                            console.error("[Tampermonkey] ColorThief processing failed:", e);
-                        }
-                    };
-                    img.src = dataUrl;
-                }
+                extractPaletteFromDataUrl(dataUrl);
             };
             reader.readAsDataURL(response.response);
         },
@@ -675,7 +687,79 @@
             accentStyleElement.remove();
         }
         
+        const accentRgb = p.colors[0].join(', ');
+        const soft = p.rgba(p.colors[0], 0.18);
+        const softHover = p.rgba(p.colors[0], 0.26);
+        const softActive = p.rgba(p.colors[0], 0.32);
+        const softAlpha = p.rgba(p.colors[0], 0.14);
+        const softAlphaHover = p.rgba(p.colors[0], 0.22);
+        const softAlphaActive = p.rgba(p.colors[0], 0.3);
+        const outline = p.rgba(p.colors[0], 0.45);
+        const outlineHover = p.rgba(p.colors[0], 0.6);
+        const ghostHover = p.rgba(p.colors[0], 0.12);
+        const ghostActive = p.rgba(p.colors[0], 0.2);
+        const selection = p.rgba(p.colors[0], 0.35);
+
         const accentCSS = `
+            :root {
+                --tm-accent-1: ${hex1};
+                --tm-accent-2: ${hex2};
+                --tm-accent-3: ${hex3};
+                --tm-accent-4: ${hex4};
+                --tm-accent-5: ${hex5};
+                --tm-accent-text: ${textColor1};
+                --tm-accent-text-secondary: ${textColor2};
+                --tm-accent-rgb: ${accentRgb};
+                --link: ${hex1};
+                --link-hover: ${hex2};
+                --link-primary-text-color: ${hex1};
+                --link-primary-text-color-hover: ${hex2};
+                --selection: ${selection};
+            }
+
+            :root,
+            [data-chat-theme] {
+                --theme-submit-btn-bg: ${hex1};
+                --theme-submit-btn-text: ${textColor1};
+                --theme-user-selection-bg: ${selection};
+                --theme-entity-accent: ${hex2};
+                --default-theme-submit-btn-bg: ${hex1};
+                --default-theme-submit-btn-text: ${textColor1};
+                --default-theme-user-selection-bg: ${selection};
+                --default-theme-entity-accent: ${hex2};
+            }
+
+            :root,
+            .puik-root,
+            .puik-root [data-theme] {
+                --color-ring: ${hex2};
+                --color-ring-primary: ${hex2};
+                --color-ring-primary-soft: ${hex2};
+                --color-ring-primary-solid: ${hex2};
+                --color-ring-primary-outline: ${hex2};
+                --color-ring-primary-ghost: ${hex2};
+                --color-background-primary-solid: ${hex1};
+                --color-background-primary-solid-hover: ${hex2};
+                --color-background-primary-solid-active: ${hex3};
+                --color-text-primary-solid: ${textColor1};
+                --color-background-primary-soft: ${soft};
+                --color-background-primary-soft-hover: ${softHover};
+                --color-background-primary-soft-active: ${softActive};
+                --color-background-primary-soft-alpha: ${softAlpha};
+                --color-background-primary-soft-alpha-hover: ${softAlphaHover};
+                --color-background-primary-soft-alpha-active: ${softAlphaActive};
+                --color-background-primary-outline-hover: ${ghostHover};
+                --color-background-primary-outline-active: ${ghostActive};
+                --color-border-primary-outline: ${outline};
+                --color-border-primary-outline-hover: ${outlineHover};
+                --color-text-primary-outline: ${hex1};
+                --color-text-primary-outline-hover: ${hex2};
+                --color-background-primary-ghost-hover: ${ghostHover};
+                --color-background-primary-ghost-active: ${ghostActive};
+                --color-text-primary-ghost: ${hex1};
+                --color-text-primary-ghost-hover: ${hex2};
+            }
+
             /* ===== SCROLLBAR ===== */
             ::-webkit-scrollbar {
                 width: 10px;
@@ -726,30 +810,6 @@
                 border-color: ${hex1} !important;
                 box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.3)} !important;
             }
-            
-            /* ===== SETTINGS PANEL ACCENT ===== */
-            .tm-settings-panel h3 {
-                color: ${hex1} !important;
-            }
-            .tm-settings-panel select:focus,
-            .tm-settings-panel select:hover {
-                border-color: ${hex1} !important;
-                background: ${p.rgba(p.colors[0], 0.1)} !important;
-            }
-            .tm-settings-group input[type="range"]::-webkit-slider-thumb {
-                background: ${hex1} !important;
-                box-shadow: 0 0 10px ${p.rgba(p.colors[0], 0.5)} !important;
-            }
-            .tm-preview-btn {
-                background: linear-gradient(135deg, ${hex1}, ${hex2}) !important;
-                color: ${textColor1} !important;
-            }
-            .tm-preview-btn:hover {
-                box-shadow: 0 5px 20px ${p.rgba(p.colors[0], 0.4)} !important;
-            }
-            .tm-settings-btn:hover {
-                box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.5)} !important;
-            }
         `;
         
         accentStyleElement = document.createElement('style');
@@ -765,6 +825,93 @@
         }
         const existing = document.getElementById('tm-accent-styles');
         if (existing) existing.remove();
+        scheduleGlassToneUpdate();
+    }
+
+    function applyAccentFromPalette(p) {
+        if (!p || !p.colors || !p.colors.length) return;
+
+        const swatches = p.swatches || {};
+        const primarySwatch = swatches.Vibrant || swatches.LightVibrant || swatches.DarkVibrant || swatches.Muted || swatches.LightMuted || swatches.DarkMuted || null;
+        const secondarySwatch = swatches.Muted || swatches.LightMuted || swatches.DarkMuted || primarySwatch;
+
+        const hex1 = p.hex[0];
+        const hex2 = p.hex[1] || p.hex[0];
+        const hex3 = p.hex[2] || p.hex[0];
+        const hex4 = p.hex[3] || p.hex[1] || p.hex[0];
+        const hex5 = p.hex[4] || p.hex[2] || p.hex[0];
+        const textColor1 = primarySwatch?.titleTextColor || primarySwatch?.bodyTextColor || getTextColor(p.colors[0]);
+        const textColor2 = secondarySwatch?.titleTextColor || secondarySwatch?.bodyTextColor || getTextColor(p.colors[1] || p.colors[0]);
+
+        applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
+        scheduleGlassToneUpdate();
+    }
+
+    function ensureVibrant() {
+        const existing = window.Vibrant || (typeof Vibrant !== 'undefined' ? Vibrant : null);
+        if (existing) return Promise.resolve(existing);
+
+        const sources = [
+            'https://unpkg.com/node-vibrant@latest/dist/vibrant.min.js',
+            'https://cdn.jsdelivr.net/npm/node-vibrant@latest/dist/vibrant.min.js'
+        ];
+
+        return new Promise((resolve, reject) => {
+            const loadNext = (index) => {
+                if (index >= sources.length) {
+                    reject(new Error('node-vibrant failed to load from all sources'));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = sources[index];
+                script.async = true;
+                script.onload = () => {
+                    const loaded = window.Vibrant || (typeof Vibrant !== 'undefined' ? Vibrant : null);
+                    if (loaded) resolve(loaded);
+                    else loadNext(index + 1);
+                };
+                script.onerror = () => loadNext(index + 1);
+                (document.head || document.documentElement).appendChild(script);
+            };
+
+            loadNext(0);
+        });
+    }
+
+    function extractPaletteFromDataUrl(dataUrl) {
+        ensureVibrant().then((VibrantLib) => {
+            return VibrantLib.from(dataUrl).getPalette();
+        }).then((palette) => {
+            const swatchOrder = ['Vibrant', 'LightVibrant', 'DarkVibrant', 'Muted', 'LightMuted', 'DarkMuted'];
+            const swatchList = swatchOrder.map((name) => palette[name]).filter(Boolean);
+
+            if (!swatchList.length) {
+                console.warn('[Tampermonkey] node-vibrant returned no swatches.');
+                return;
+            }
+
+            const primarySwatch = palette.Vibrant || swatchList[0];
+            const paletteObj = {
+                primary: primarySwatch.rgb,
+                colors: swatchList.map((swatch) => swatch.rgb),
+                hex: swatchList.map((swatch) => swatch.hex),
+                rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`,
+                swatches: palette
+            };
+
+            window.tmPalette = paletteObj;
+
+            if (settings.accentMode) {
+                applyAccentFromPalette(paletteObj);
+            }
+
+            if (window.tmUpdatePalettePreview) {
+                window.tmUpdatePalettePreview();
+            }
+        }).catch((err) => {
+            console.error('[Tampermonkey] node-vibrant processing failed:', err);
+        });
     }
 
     // =================================================================
@@ -788,19 +935,19 @@
             backdrop-filter: blur(1px);
         }
         div[data-message-author-role="user"].text-message > div > div {
-            background-color: rgba(0,10,0, 0.5) !important;
+            background-color: var(--tm-glass-strong-bg, rgba(0,10,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
         }
         div[role="presentation"] .h-full article > div > div { max-width: 65rem; }
         div[data-message-author-role="assistant"].text-message pre > div {
-            background-color: rgba(0,0,0, 0.5) !important;
+            background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
             margin-right: 1rem;
         }
         div[data-message-author-role="assistant"].text-message {
-            background-color: rgba(0,0,0, 0.5) !important;
+            background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(4px);
             backdrop-filter: blur(4px);
             border-radius: 25px;
@@ -816,17 +963,17 @@
             background: none !important;
         }
         nav:nth-of-type(1) > *:nth-child(10) {
-            background-color: rgba(5,5,5,0.25) !important;
+            background-color: var(--tm-glass-bg, rgba(5,5,5,0.25)) !important;
             -webkit-backdrop-filter: blur(25px) !important;
             backdrop-filter: blur(50px) !important;
         }
         #stage-slideover-sidebar {
-            background-color: rgba(10,10,10, 0) !important;
+            background-color: var(--tm-glass-bg, rgba(10,10,10, 0)) !important;
             -webkit-backdrop-filter: blur(5px);
             backdrop-filter: blur(5px);
         }
         #thread-bottom .bg-token-bg-primary {
-            background-color: rgba(0, 0, 0, 0.4) !important;
+            background-color: var(--tm-glass-bg, rgba(0, 0, 0, 0.4)) !important;
             -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             border-radius: 24px;
@@ -1026,8 +1173,8 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(30, 30, 30, 0.85);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: var(--tm-glass-bg, rgba(30, 30, 30, 0.85));
+            border: 1px solid var(--tm-glass-border, rgba(255,255,255,0.15));
             color: #fff;
             cursor: pointer;
             /* ensure this is always on top of animated background */
@@ -1035,29 +1182,29 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: var(--tm-glass-filter, blur(10px));
             transition: all 0.3s ease;
             font-size: 20px;
             transform: translateZ(0);
         }
         .tm-settings-btn:hover {
-            background: rgba(50, 50, 50, 0.95);
+            background: var(--tm-glass-strong-bg, rgba(50, 50, 50, 0.95));
             transform: scale(1.1) rotate(30deg);
-            box-shadow: 0 0 15px rgba(0,255,65,0.3);
+            box-shadow: 0 0 15px rgba(var(--tm-accent-rgb, 0, 255, 65), 0.3);
         }
         .tm-settings-panel {
             position: fixed;
             bottom: 75px;
             right: 20px;
             width: 300px;
-            background: rgba(20, 20, 20, 0.95);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--tm-glass-bg, rgba(20, 20, 20, 0.95));
+            border: 1px solid var(--tm-glass-border, rgba(255,255,255,0.1));
             border-radius: 16px;
             padding: 20px;
             /* ensure panel sits above animated background */
             z-index: 2147483647 !important;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            backdrop-filter: var(--tm-glass-filter, blur(20px));
+            box-shadow: var(--tm-glass-shadow, 0 10px 40px rgba(0,0,0,0.5));
             transform: translateY(20px);
             opacity: 0;
             visibility: hidden;
@@ -1070,7 +1217,7 @@
         }
         .tm-settings-panel h3 {
             margin: 0 0 16px 0;
-            color: #00ff41;
+            color: var(--tm-accent-1, #00ff41);
             font-size: 14px;
             font-weight: 600;
             text-transform: uppercase;
@@ -1101,9 +1248,9 @@
         }
         .tm-settings-group select:hover,
         .tm-settings-group select:focus {
-            border-color: #00ff41;
+            border-color: var(--tm-accent-1, #00ff41);
             outline: none;
-            background: rgba(0,255,65,0.05);
+            background: rgba(var(--tm-accent-rgb, 0, 255, 65), 0.08);
         }
         .tm-settings-group select option {
             background: #1a1a1a;
@@ -1122,13 +1269,13 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #00ff41;
+            background: var(--tm-accent-1, #00ff41);
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,255,65,0.5);
+            box-shadow: 0 0 10px rgba(var(--tm-accent-rgb, 0, 255, 65), 0.5);
         }
         .tm-range-value {
             text-align: right;
-            color: #00ff41;
+            color: var(--tm-accent-1, #00ff41);
             font-size: 12px;
             margin-top: 4px;
             font-family: monospace;
@@ -1136,10 +1283,10 @@
         .tm-preview-btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+            background: linear-gradient(135deg, var(--tm-accent-1, #00ff41) 0%, var(--tm-accent-2, #00cc33) 100%);
             border: none;
             border-radius: 8px;
-            color: #000;
+            color: var(--tm-accent-text, #000);
             font-weight: 600;
             font-size: 13px;
             cursor: pointer;
@@ -1149,7 +1296,7 @@
         }
         .tm-preview-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,255,65,0.4);
+            box-shadow: 0 5px 20px rgba(var(--tm-accent-rgb, 0, 255, 65), 0.4);
         }
         .tm-settings-note {
             margin-top: 12px;
@@ -1191,7 +1338,7 @@
             border-radius: 50%;
         }
         .tm-toggle input:checked + .tm-toggle-slider {
-            background: linear-gradient(135deg, #00ff41, #00cc33);
+            background: linear-gradient(135deg, var(--tm-accent-1, #00ff41), var(--tm-accent-2, #00cc33));
         }
         .tm-toggle input:checked + .tm-toggle-slider:before {
             transform: translateX(20px);
@@ -1304,7 +1451,8 @@
                 palettePreview.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:11px;">No wallpaper palette detected</span>';
             }
         }
-        setTimeout(updatePalettePreview, 1000); // Wait for palette extraction
+        window.tmUpdatePalettePreview = updatePalettePreview;
+        updatePalettePreview();
         
         accentToggle.addEventListener('change', (e) => {
             settings.accentMode = e.target.checked;
@@ -1312,16 +1460,7 @@
             saveSettings();
             
             if (e.target.checked && window.tmPalette) {
-                const p = window.tmPalette;
-                const getTextColor = (rgb) => {
-                    const yiq = ((rgb[0]*299)+(rgb[1]*587)+(rgb[2]*114))/1000;
-                    return (yiq >= 128) ? 'black' : 'white';
-                };
-                applyAccentStyles(
-                    p, p.hex[0], p.hex[1] || p.hex[0], p.hex[2] || p.hex[0],
-                    p.hex[3] || p.hex[1] || p.hex[0], p.hex[4] || p.hex[2] || p.hex[0],
-                    getTextColor(p.colors[0]), getTextColor(p.colors[1] || p.colors[0])
-                );
+                applyAccentFromPalette(window.tmPalette);
             } else {
                 removeAccentStyles();
             }
@@ -1344,9 +1483,11 @@
             startGlitchLoop(versionElement, versionElement.innerText);
         }
         tryApplyQuote();
+        scheduleGlassToneUpdate();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
+    scheduleGlassToneUpdate();
 
     // Initialize settings UI when DOM is ready
     if (document.readyState === 'loading') {
