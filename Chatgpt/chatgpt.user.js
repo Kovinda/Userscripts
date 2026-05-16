@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + Vibrant UI
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0007
+// @version      2026.05.16.0008
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -249,7 +249,26 @@
                 --user-message-text-color: ${textColor1} !important;
             }
 
-
+            /* ===== CHAT BUBBLES ===== */
+            [data-turn="user"] .user-message-bubble-color,
+            div[data-message-author-role="user"].text-message .user-message-bubble-color {
+                background-color: ${p.rgba(p.colors[0], 0.85)} !important;
+                backdrop-filter: blur(16px) saturate(140%) !important;
+                -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+                color: ${textColor1} !important;
+                border: 1px solid ${p.rgba(p.colors[0], 0.3)} !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+            }
+            [data-turn="assistant"] .markdown,
+            div[data-message-author-role="assistant"].text-message .markdown {
+                background-color: rgba(15, 15, 15, 0.8) !important;
+                backdrop-filter: blur(16px) saturate(120%) !important;
+                -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 20px !important;
+                padding: 18px 24px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+            }
 
             /* ===== SCROLLBAR ===== */
             ::-webkit-scrollbar {
@@ -373,6 +392,22 @@
             backdrop-filter: blur(1px);
         }
         div[role="presentation"] .h-full article > div > div { max-width: 65rem; }
+        [data-turn="user"] .user-message-bubble-color,
+        div[data-message-author-role="user"].text-message .user-message-bubble-color {
+            background-color: var(--tm-glass-strong-bg, rgba(20,20,20, 0.85)) !important;
+            backdrop-filter: blur(16px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+        }
+        [data-turn="assistant"] .markdown,
+        div[data-message-author-role="assistant"].text-message .markdown {
+            background-color: var(--tm-glass-strong-bg, rgba(15,15,15, 0.8)) !important;
+            backdrop-filter: blur(16px) saturate(120%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            padding: 18px 24px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        }
         [data-turn="assistant"] pre > div,
         div[data-message-author-role="assistant"].text-message pre > div {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
