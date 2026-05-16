@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0019
+// @version      2026.05.16.0021
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -474,11 +474,33 @@
         }
         #page-header, 
         #stage-slideover-sidebar div.sticky.top-0 {
+            background-color: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+        }
+        [data-testid="model-switcher-dropdown-button"],
+        [data-testid="thread-header-right-actions-container"],
+        #sidebar-header a,
+        #sidebar-header button {
             background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
-            border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
-            box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
+            box-shadow: var(--tm-glass-shadow, 0 8px 20px rgba(0, 0, 0, 0.3)) !important;
+            border-radius: 20px !important;
+            padding: 4px 12px !important;
+        }
+        #sidebar-header a,
+        #sidebar-header button {
+            border-radius: 12px !important;
+            padding: 0 !important;
+            width: 36px !important;
+            height: 36px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
         #stage-slideover-sidebar .z-30:not(.sticky),
         #stage-slideover-sidebar [data-testid="accounts-profile-button"] {
