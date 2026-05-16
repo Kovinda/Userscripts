@@ -358,6 +358,7 @@
                     };
 
                     window.dbPalette = paletteObj;
+                    console.log('[Danbooru Enhancer] Palette extracted:', paletteObj);
 
                     if (accentEnabled) {
                         applyAccentFromPalette(paletteObj);
