@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0017
+// @version      2026.05.16.0019
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -392,6 +392,24 @@
             background-color: transparent !important;
             -webkit-backdrop-filter: blur(1px);
             backdrop-filter: blur(1px);
+        }
+        [data-radix-popper-content-wrapper] > div,
+        [data-radix-menu-content],
+        [role="menu"],
+        [role="dialog"],
+        .popover {
+            background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.85)) !important;
+            backdrop-filter: blur(24px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+            border-radius: 20px !important;
+        }
+        [role="menuitem"]:hover,
+        [role="menuitem"]:focus,
+        [role="menuitem"][data-state="open"] {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-radius: 12px !important;
         }
         div[role="presentation"] .h-full article > div > div { max-width: 65rem; }
         [data-turn="user"] .user-message-bubble-color,
