@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0027
+// @version      2026.05.16.0028
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -689,7 +689,7 @@
 
     GM_xmlhttpRequest({
         method: "GET",
-        url: "https://api.quotable.io/random",
+        url: "http://api.quotable.io/random",
         onload: function(response) {
             try {
                 if(response.status === 200) {
