@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         ChatGPT Background Dimmer - Sweep + Glitch + Quote + Vibrant UI
+// @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0008
+// @version      2026.05.16.0010
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -55,15 +55,17 @@
         if (mode === 'dark') {
             root.style.setProperty('--tm-glass-bg', 'rgba(10, 10, 10, 0.5)');
             root.style.setProperty('--tm-glass-strong-bg', 'rgba(0, 0, 0, 0.6)');
+            root.style.setProperty('--tm-glass-header-bg', 'rgba(10, 10, 10, 0.45)');
             root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.08)');
             root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.35)');
-            root.style.setProperty('--tm-glass-filter', 'blur(12px) saturate(120%)');
+            root.style.setProperty('--tm-glass-filter', 'blur(16px) saturate(120%)');
         } else {
             root.style.setProperty('--tm-glass-bg', 'rgba(255, 255, 255, 0.35)');
             root.style.setProperty('--tm-glass-strong-bg', 'rgba(255, 255, 255, 0.6)');
+            root.style.setProperty('--tm-glass-header-bg', 'rgba(255, 255, 255, 0.45)');
             root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.35)');
             root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.14)');
-            root.style.setProperty('--tm-glass-filter', 'blur(12px) saturate(140%)');
+            root.style.setProperty('--tm-glass-filter', 'blur(16px) saturate(140%)');
         }
     };
 
@@ -420,14 +422,12 @@
             -webkit-backdrop-filter: blur(25px);
             backdrop-filter: blur(25px);
         }
-        nav:nth-of-type(1) > *:not(:nth-child(2)):nth-child(-n+7),
-        #stage-slideover-sidebar > div > div:nth-of-type(2) {
-            background: none !important;
-        }
-        nav:nth-of-type(1) > *:nth-child(10) {
-            background-color: var(--tm-glass-bg, rgba(5,5,5,0.25)) !important;
-            -webkit-backdrop-filter: blur(25px) !important;
-            backdrop-filter: blur(50px) !important;
+        #page-header {
+            background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
+            backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
+            -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
+            border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+            box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
         }
         #stage-slideover-sidebar {
             background-color: var(--tm-glass-bg, rgba(10,10,10, 0)) !important;
