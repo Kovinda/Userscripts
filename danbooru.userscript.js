@@ -184,7 +184,27 @@
             }
             
             #content {
-            
+                background: rgba(10, 10, 10, 0.35);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 18px;
+                padding: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px) saturate(120%);
+                -webkit-backdrop-filter: blur(12px) saturate(120%);
+            }
+
+            #sidebar {
+                background: transparent !important;
+            }
+
+            #sidebar > * {
+                background: rgba(10, 10, 10, 0.35);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 18px;
+                padding: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px) saturate(120%);
+                -webkit-backdrop-filter: blur(12px) saturate(120%);
             }
 
             /* ========================================================= */
