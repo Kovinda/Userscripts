@@ -190,6 +190,9 @@
                 align-items: center;
                 justify-content: center;
                 text-align: center;
+                width: 100%;
+                margin: 0 auto;
+                flex: 0 0 100%;
             }
             
             #content {
