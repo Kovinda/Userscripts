@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0015
+// @version      2026.05.16.0017
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -410,12 +410,22 @@
             padding: 18px 24px !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
         }
+        [data-turn="assistant"] pre,
+        div[data-message-author-role="assistant"].text-message pre {
+            background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+            border-radius: 20px !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            margin-right: 1rem;
+        }
         [data-turn="assistant"] pre > div,
         div[data-message-author-role="assistant"].text-message pre > div {
-            background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
-            -webkit-backdrop-filter: blur(4px);
-            backdrop-filter: blur(4px);
-            margin-right: 1rem;
+            background-color: transparent !important;
+            border-radius: 20px !important;
+            overflow: hidden !important;
         }
         div[role="presentation"] div.group div.flex {
             background-color: rgba(10,10,10, 0) !important;
