@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0028
+// @version      2026.05.16.0030
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -667,6 +667,7 @@
     `);
 
     let fetchedQuoteHtml = null;
+    let quoteAnimationPlayed = false;
     const headerParentSelector = '[data-splash-headline-option] h1';
 
     // Helper: Logic to determine where to break lines
@@ -723,6 +724,13 @@
             if (!customQuoteDiv) {
                 customQuoteDiv = document.createElement('div');
                 customQuoteDiv.className = 'tm-custom-quote text-pretty whitespace-pre-wrap';
+                if (quoteAnimationPlayed) {
+                    customQuoteDiv.style.animation = 'none';
+                    customQuoteDiv.style.opacity = '1';
+                    customQuoteDiv.style.transform = 'none';
+                } else {
+                    setTimeout(() => { quoteAnimationPlayed = true; }, 1500);
+                }
                 customQuoteDiv.innerHTML = fetchedQuoteHtml;
                 headerParent.appendChild(customQuoteDiv);
             }
@@ -914,6 +922,8 @@
     `);
 
     function createSettingsUI() {
+        if (document.querySelector('.tm-settings-btn')) return;
+
         // Settings toggle button
         const btn = document.createElement('button');
         btn.className = 'tm-settings-btn';
@@ -1050,6 +1060,7 @@
         if (versionElement && versionElement.innerText.trim().length > 0 && !versionElement.dataset.glitchProcessed) {
             startGlitchLoop(versionElement, versionElement.innerText);
         }
+        createSettingsUI();
         tryApplyQuote();
         scheduleGlassToneUpdate();
     });
