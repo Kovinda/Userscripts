@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0030
+// @version      2026.05.16.0032
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -729,7 +729,7 @@
                     customQuoteDiv.style.opacity = '1';
                     customQuoteDiv.style.transform = 'none';
                 } else {
-                    setTimeout(() => { quoteAnimationPlayed = true; }, 1500);
+                    quoteAnimationPlayed = true;
                 }
                 customQuoteDiv.innerHTML = fetchedQuoteHtml;
                 headerParent.appendChild(customQuoteDiv);
