@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0023
+// @version      2026.05.16.0025
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -529,8 +529,8 @@
             -webkit-backdrop-filter: blur(12px) !important;
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
         }
-        main .composer-parent div.sm\:flex.sm\:flex-wrap button.sm\:rounded-\[100px\],
-        main div[class*="sm:gap-3"] > div > button.group {
+        div[class*="sm:gap-3"] button[class*="rounded"],
+        button[class*="sm:rounded-[100px]"] {
             background-color: var(--tm-glass-header-bg, rgba(20, 20, 20, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
@@ -539,9 +539,10 @@
             transition: all 0.2s ease !important;
             border-radius: 100px !important;
         }
-        main .composer-parent div.sm\:flex.sm\:flex-wrap button.sm\:rounded-\[100px\]:hover,
-        main div[class*="sm:gap-3"] > div > button.group:hover,
-        main div[class*="sm:gap-3"] > div > button.group:enabled:hover {
+        div[class*="sm:gap-3"] button[class*="rounded"]:hover,
+        div[class*="sm:gap-3"] button[class*="rounded"]:enabled:hover,
+        button[class*="sm:rounded-[100px]"]:hover,
+        button[class*="sm:rounded-[100px]"]:enabled:hover {
             background-color: rgba(255, 255, 255, 0.12) !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
             transform: translateY(-2px) !important;
