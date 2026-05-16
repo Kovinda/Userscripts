@@ -5,6 +5,7 @@
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
+// @require      https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
 // @connect      localhost
@@ -20,6 +21,7 @@
     const STORAGE_KEY_ANIM = 'danbooru_bg_anim';
     const STORAGE_KEY_DUR = 'danbooru_bg_dur';
     const STORAGE_KEY_EASE = 'danbooru_bg_ease';
+    const STORAGE_KEY_ACCENT = 'danbooru_accent_mode';
 
     const BACKGROUND_IMAGE_URL = `http://127.0.0.1:8190/ActiveBackground.jpg?rand=${Math.random()}`;
     const OVERLAY_COLOR = 'rgba(0, 0, 0, 0.5)';
@@ -31,6 +33,13 @@
     const bgAnimation = safeGet(STORAGE_KEY_ANIM, 'sweepDown');
     const bgDuration = safeGet(STORAGE_KEY_DUR, '1.5');
     const bgEasing = safeGet(STORAGE_KEY_EASE, 'ease-out');
+    let accentEnabled = safeGet(STORAGE_KEY_ACCENT, 'true') === 'true';
+
+    const rgbToHex = (rgb) => "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+    const getTextColor = (rgb) => {
+        const yiq = ((rgb[0] * 299) + (rgb[1] * 587) + (rgb[2] * 114)) / 1000;
+        return yiq >= 128 ? 'black' : 'white';
+    };
 
     // --- 1. Background Animation Presets ---
     const ANIMATION_OPTIONS = [
@@ -217,6 +226,134 @@
         });
     };
 
+    let accentStyleElement = null;
+
+    const applyAccentStyles = (p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2) => {
+        if (accentStyleElement) {
+            accentStyleElement.remove();
+        }
+
+        const accentCss = `
+            body,
+            body[data-current-user-theme],
+            body[data-current-user-theme="light"],
+            body[data-current-user-theme="dark"] {
+                --link-color: ${hex1};
+                --link-hover-color: ${hex2};
+                --focus-ring-color: ${hex2};
+                --checkbox-selected-color: ${hex1};
+                --toggle-switch-selected-color: ${hex1};
+                --button-primary-background-color: ${hex1};
+                --button-primary-hover-background-color: ${hex2};
+                --button-outline-primary-color: ${hex1};
+                --subnav-menu-background-color: ${p.rgba(p.colors[0], 0.18)};
+                --responsive-menu-background-color: ${p.rgba(p.colors[0], 0.22)};
+                --card-background-color: ${p.rgba(p.colors[0], 0.14)};
+                --chip-primary-background-color: ${p.rgba(p.colors[0], 0.18)};
+                --selection-background-color: ${hex2};
+                --target-text-background-color: ${hex3};
+                --post-upvote-color: ${hex1};
+                --post-mode-menu-active-post-outline-color: ${hex1};
+                --notice-info-background: ${p.rgba(p.colors[1] || p.colors[0], 0.18)};
+                --notice-info-border-color: ${hex2};
+                --form-input-border-color: ${p.rgba(p.colors[0], 0.35)};
+            }
+
+            #db-settings-panel {
+                border: 1px solid ${p.rgba(p.colors[0], 0.35)};
+                box-shadow: 0 10px 25px ${p.rgba(p.colors[0], 0.3)};
+            }
+            #db-settings-panel .db-header {
+                color: ${hex1};
+            }
+            #db-settings-panel .db-select:focus,
+            #db-settings-panel .db-select:hover {
+                border-color: ${hex1};
+            }
+            #db-settings-panel .db-range::-webkit-slider-thumb {
+                background: ${hex1};
+            }
+            #db-settings-panel .db-btn {
+                background: linear-gradient(135deg, ${hex1}, ${hex2});
+                color: ${textColor1};
+            }
+            #db-fab {
+                border: 1px solid ${p.rgba(p.colors[0], 0.4)};
+                box-shadow: 0 4px 10px ${p.rgba(p.colors[0], 0.25)};
+            }
+            #db-fab:hover {
+                box-shadow: 0 0 14px ${p.rgba(p.colors[0], 0.4)};
+            }
+        `;
+
+        accentStyleElement = document.createElement('style');
+        accentStyleElement.id = 'db-accent-styles';
+        accentStyleElement.textContent = accentCss;
+        document.head.appendChild(accentStyleElement);
+    };
+
+    const removeAccentStyles = () => {
+        if (accentStyleElement) {
+            accentStyleElement.remove();
+            accentStyleElement = null;
+        }
+        const existing = document.getElementById('db-accent-styles');
+        if (existing) existing.remove();
+    };
+
+    const applyAccentFromPalette = (p) => {
+        if (!p || !p.colors || !p.colors.length) return;
+
+        const hex1 = p.hex[0];
+        const hex2 = p.hex[1] || p.hex[0];
+        const hex3 = p.hex[2] || p.hex[0];
+        const hex4 = p.hex[3] || p.hex[1] || p.hex[0];
+        const hex5 = p.hex[4] || p.hex[2] || p.hex[0];
+        const textColor1 = getTextColor(p.colors[0]);
+        const textColor2 = getTextColor(p.colors[1] || p.colors[0]);
+
+        applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
+    };
+
+    const extractPaletteFromDataUrl = (dataUrl) => {
+        if (typeof ColorThief === 'undefined') {
+            console.warn('[Danbooru Enhancer] ColorThief not available.');
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            try {
+                const colorThief = new ColorThief();
+                const palette = colorThief.getPalette(img, 6);
+                const primary = colorThief.getColor(img);
+
+                if (palette && palette.length > 0) {
+                    const paletteObj = {
+                        primary,
+                        colors: palette,
+                        hex: palette.map(rgbToHex),
+                        rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
+                    };
+
+                    window.dbPalette = paletteObj;
+
+                    if (accentEnabled) {
+                        applyAccentFromPalette(paletteObj);
+                    }
+
+                    if (window.dbUpdatePalettePreview) {
+                        window.dbUpdatePalettePreview();
+                    }
+                }
+            } catch (err) {
+                console.error('[Danbooru Enhancer] ColorThief processing failed:', err);
+            }
+        };
+        img.src = dataUrl;
+    };
+
     // --- 4. Settings Panel UI (DaisyUI style) ---
     const injectUI = () => {
         const style = document.createElement('style');
@@ -244,6 +381,9 @@
             .db-select:focus, .db-select:hover { border-color: #3b82f6; }
             .db-btn { background-color: #3b82f6; color: #fff; font-weight: 600; border: none; padding: 0.75rem; border-radius: 8px; cursor: pointer; text-align: center; transition: background-color 0.2s; font-size: 0.875rem; margin-top: 5px; }
             .db-btn:hover { background-color: #2563eb; }
+            .db-palette-preview { display: flex; gap: 4px; margin-top: 6px; height: 16px; }
+            .db-palette-preview div { flex: 1; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); }
+            .db-palette-empty { color: #a6adbb; font-size: 0.7rem; opacity: 0.8; }
 
             /* FAB */
             #db-fab { width: 55px; height: 55px; border-radius: 50%; background-color: #2a323c; color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; font-size: 26px; user-select: none; transition: transform 0.2s, background-color 0.2s; }
@@ -301,6 +441,15 @@
                 </select>
             </div>
 
+            <h3 class="db-header" style="margin-top: 10px;">Color Palette</h3>
+            <div class="db-row">
+                <div class="db-row-header">
+                    <span>Wallpaper Palette</span>
+                    <input type="checkbox" class="db-toggle" id="ui-accent-toggle" ${accentEnabled ? 'checked' : ''}>
+                </div>
+                <div id="ui-palette-preview" class="db-palette-preview"></div>
+            </div>
+
             <button class="db-btn" id="ui-apply-btn">Apply & Reload</button>
         `;
 
@@ -321,11 +470,36 @@
         const uiDurSlider = document.getElementById('ui-dur-slider');
         const uiDurDisplay = document.getElementById('ui-dur-display');
         const uiEaseSelect = document.getElementById('ui-bg-ease');
+        const uiAccentToggle = document.getElementById('ui-accent-toggle');
+        const uiPalettePreview = document.getElementById('ui-palette-preview');
         const applyBtn = document.getElementById('ui-apply-btn');
 
         uiLimitSlider.addEventListener('input', e => uiLimitDisplay.textContent = e.target.value);
         uiDurSlider.addEventListener('input', e => uiDurDisplay.textContent = `${e.target.value}s`);
         fab.addEventListener('click', () => panel.classList.toggle('open'));
+
+        const updatePalettePreview = () => {
+            if (window.dbPalette && window.dbPalette.hex) {
+                uiPalettePreview.innerHTML = window.dbPalette.hex.map((color, i) =>
+                    `<div title="Color ${i + 1}: ${color}" style="background:${color};"></div>`
+                ).join('');
+            } else {
+                uiPalettePreview.innerHTML = '<span class="db-palette-empty">Palette not ready</span>';
+            }
+        };
+        window.dbUpdatePalettePreview = updatePalettePreview;
+        updatePalettePreview();
+
+        uiAccentToggle.addEventListener('change', e => {
+            accentEnabled = e.target.checked;
+            localStorage.setItem(STORAGE_KEY_ACCENT, accentEnabled.toString());
+
+            if (accentEnabled && window.dbPalette) {
+                applyAccentFromPalette(window.dbPalette);
+            } else {
+                removeAccentStyles();
+            }
+        });
 
         applyBtn.addEventListener('click', () => {
             const newSafeState = uiToggle.checked;
@@ -337,6 +511,7 @@
             localStorage.setItem(STORAGE_KEY_ANIM, uiAnimSelect.value);
             localStorage.setItem(STORAGE_KEY_DUR, uiDurSlider.value);
             localStorage.setItem(STORAGE_KEY_EASE, uiEaseSelect.value);
+            localStorage.setItem(STORAGE_KEY_ACCENT, accentEnabled.toString());
 
             if (newSafeState && window.location.pathname === '/') {
                 window.location.href = `/posts?tags=rating:safe&z=5&limit=${newLimitValue}`;
@@ -355,6 +530,7 @@
             style.id = 'danbooru-bg-style';
             style.textContent = buildBackgroundCss(dataUrl);
             document.head.appendChild(style);
+            extractPaletteFromDataUrl(dataUrl);
         });
     };
 
