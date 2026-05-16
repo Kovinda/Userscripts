@@ -5,7 +5,7 @@
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
-// @require      https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js
+// @require      https://cdn.jsdelivr.net/npm/node-vibrant@latest/dist/vibrant.min.js
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
 // @connect      localhost
@@ -164,7 +164,13 @@
             }
 
             #top {
-                background: transparent !important;
+                background: rgba(255, 255, 255, 0.28) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-radius: 16px;
+                padding: 10px 14px;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+                backdrop-filter: blur(16px) saturate(140%);
+                -webkit-backdrop-filter: blur(16px) saturate(140%);
             }
 
             #main-menu > .current {
@@ -180,7 +186,10 @@
             }
             
             #app-name-header {
-            
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
             }
             
             #content {
@@ -324,55 +333,87 @@
     const applyAccentFromPalette = (p) => {
         if (!p || !p.colors || !p.colors.length) return;
 
+        const swatches = p.swatches || {};
+        const primarySwatch = swatches.Vibrant || swatches.LightVibrant || swatches.DarkVibrant || swatches.Muted || swatches.LightMuted || swatches.DarkMuted || null;
+        const secondarySwatch = swatches.Muted || swatches.LightMuted || swatches.DarkMuted || primarySwatch;
+
         const hex1 = p.hex[0];
         const hex2 = p.hex[1] || p.hex[0];
         const hex3 = p.hex[2] || p.hex[0];
         const hex4 = p.hex[3] || p.hex[1] || p.hex[0];
         const hex5 = p.hex[4] || p.hex[2] || p.hex[0];
-        const textColor1 = getTextColor(p.colors[0]);
-        const textColor2 = getTextColor(p.colors[1] || p.colors[0]);
+        const textColor1 = primarySwatch?.titleTextColor || primarySwatch?.bodyTextColor || getTextColor(p.colors[0]);
+        const textColor2 = secondarySwatch?.titleTextColor || secondarySwatch?.bodyTextColor || getTextColor(p.colors[1] || p.colors[0]);
 
         applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2);
     };
 
-    const extractPaletteFromDataUrl = (dataUrl) => {
-        if (typeof ColorThief === 'undefined') {
-            console.warn('[Danbooru Enhancer] ColorThief not available.');
-            return;
-        }
+    const ensureVibrant = () => {
+        const existing = window.Vibrant || (typeof Vibrant !== 'undefined' ? Vibrant : null);
+        if (existing) return Promise.resolve(existing);
 
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            try {
-                const colorThief = new ColorThief();
-                const palette = colorThief.getPalette(img, 6);
-                const primary = colorThief.getColor(img);
+        const sources = [
+            'https://unpkg.com/node-vibrant@latest/dist/vibrant.min.js',
+            'https://cdn.jsdelivr.net/npm/node-vibrant@latest/dist/vibrant.min.js'
+        ];
 
-                if (palette && palette.length > 0) {
-                    const paletteObj = {
-                        primary,
-                        colors: palette,
-                        hex: palette.map(rgbToHex),
-                        rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
-                    };
-
-                    window.dbPalette = paletteObj;
-                    console.log('[Danbooru Enhancer] Palette extracted:', paletteObj);
-
-                    if (accentEnabled) {
-                        applyAccentFromPalette(paletteObj);
-                    }
-
-                    if (window.dbUpdatePalettePreview) {
-                        window.dbUpdatePalettePreview();
-                    }
+        return new Promise((resolve, reject) => {
+            const loadNext = (index) => {
+                if (index >= sources.length) {
+                    reject(new Error('node-vibrant failed to load from all sources'));
+                    return;
                 }
-            } catch (err) {
-                console.error('[Danbooru Enhancer] ColorThief processing failed:', err);
+
+                const script = document.createElement('script');
+                script.src = sources[index];
+                script.async = true;
+                script.onload = () => {
+                    const loaded = window.Vibrant || (typeof Vibrant !== 'undefined' ? Vibrant : null);
+                    if (loaded) resolve(loaded);
+                    else loadNext(index + 1);
+                };
+                script.onerror = () => loadNext(index + 1);
+                (document.head || document.documentElement).appendChild(script);
+            };
+
+            loadNext(0);
+        });
+    };
+
+    const extractPaletteFromDataUrl = (dataUrl) => {
+        ensureVibrant().then((VibrantLib) => {
+            return VibrantLib.from(dataUrl).getPalette();
+        }).then((palette) => {
+            const swatchOrder = ['Vibrant', 'LightVibrant', 'DarkVibrant', 'Muted', 'LightMuted', 'DarkMuted'];
+            const swatchList = swatchOrder.map((name) => palette[name]).filter(Boolean);
+
+            if (!swatchList.length) {
+                console.warn('[Danbooru Enhancer] node-vibrant returned no swatches.');
+                return;
             }
-        };
-        img.src = dataUrl;
+
+            const primarySwatch = palette.Vibrant || swatchList[0];
+            const paletteObj = {
+                primary: primarySwatch.rgb,
+                colors: swatchList.map((swatch) => swatch.rgb),
+                hex: swatchList.map((swatch) => swatch.hex),
+                rgba: (rgb, alpha) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`,
+                swatches: palette
+            };
+
+            window.dbPalette = paletteObj;
+            console.log('[Danbooru Enhancer] Palette extracted:', paletteObj);
+
+            if (accentEnabled) {
+                applyAccentFromPalette(paletteObj);
+            }
+
+            if (window.dbUpdatePalettePreview) {
+                window.dbUpdatePalettePreview();
+            }
+        }).catch((err) => {
+            console.error('[Danbooru Enhancer] node-vibrant processing failed:', err);
+        });
     };
 
     // --- 4. Settings Panel UI (DaisyUI style) ---
