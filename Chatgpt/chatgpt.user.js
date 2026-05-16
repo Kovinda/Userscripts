@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0013
+// @version      2026.05.16.0015
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -422,27 +422,48 @@
             -webkit-backdrop-filter: blur(25px);
             backdrop-filter: blur(25px);
         }
-        [class*="bg-(--sidebar-surface-primary)"] {
+        #stage-slideover-sidebar,
+        #stage-slideover-sidebar > div,
+        #stage-slideover-sidebar > div > div,
+        #stage-slideover-sidebar nav,
+        #stage-slideover-sidebar ul,
+        #stage-slideover-sidebar [class*="surface"],
+        #stage-slideover-sidebar [class*="bg-"] {
             background-color: transparent !important;
         }
-        #page-header, #stage-slideover-sidebar .sticky.top-0 {
+        #stage-slideover-sidebar nav::-webkit-scrollbar,
+        #stage-slideover-sidebar div::-webkit-scrollbar {
+            width: 6px;
+        }
+        #stage-slideover-sidebar nav::-webkit-scrollbar-track,
+        #stage-slideover-sidebar div::-webkit-scrollbar-track {
+            background: transparent !important;
+        }
+        #stage-slideover-sidebar nav::-webkit-scrollbar-thumb,
+        #stage-slideover-sidebar div::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-radius: 3px;
+        }
+        #page-header, 
+        #stage-slideover-sidebar div.sticky.top-0 {
             background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
         }
-        #stage-slideover-sidebar .z-30:not(.sticky) {
+        #stage-slideover-sidebar .z-30:not(.sticky),
+        #stage-slideover-sidebar [data-testid="accounts-profile-button"] {
             background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
             border-top: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
         }
         #stage-slideover-sidebar {
-            background-color: var(--tm-glass-bg, rgba(10,10,10, 0)) !important;
+            background-color: var(--tm-glass-bg, rgba(10, 10, 10, 0.35)) !important;
             border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
-            -webkit-backdrop-filter: blur(5px);
-            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
         }
         #thread-bottom [data-composer-surface="true"], #thread-bottom .bg-token-bg-primary {
             background-color: var(--tm-glass-bg, rgba(0, 0, 0, 0.4)) !important;
