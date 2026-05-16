@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0025
+// @version      2026.05.16.0027
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -667,8 +667,7 @@
     `);
 
     let fetchedQuoteHtml = null;
-    const headerParentSelector = 'h1.text-page-header';
-    const originalTextSelector = 'h1.text-page-header > div.text-pretty.whitespace-pre-wrap';
+    const headerParentSelector = '[data-splash-headline-option] h1';
 
     // Helper: Logic to determine where to break lines
     function formatQuoteText(text) {
@@ -690,7 +689,7 @@
 
     GM_xmlhttpRequest({
         method: "GET",
-        url: "http://api.quotable.io/random",
+        url: "https://api.quotable.io/random",
         onload: function(response) {
             try {
                 if(response.status === 200) {
@@ -712,10 +711,9 @@
     function tryApplyQuote() {
         if (!fetchedQuoteHtml) return;
 
-        const headerParent = document.querySelector(headerParentSelector);
-        const originalTextDiv = document.querySelector(originalTextSelector);
-
-        if (headerParent) {
+        const headerParents = document.querySelectorAll(headerParentSelector);
+        headerParents.forEach(headerParent => {
+            const originalTextDiv = headerParent.querySelector('div');
             if (originalTextDiv && originalTextDiv.style.display !== 'none') {
                 originalTextDiv.style.display = 'none';
             }
@@ -728,7 +726,7 @@
                 customQuoteDiv.innerHTML = fetchedQuoteHtml;
                 headerParent.appendChild(customQuoteDiv);
             }
-        }
+        });
     }
 
     // =================================================================
