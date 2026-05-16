@@ -41,6 +41,47 @@
         return yiq >= 128 ? 'black' : 'white';
     };
     const darkenRgb = (rgb, amount) => rgb.map((c) => Math.max(0, Math.min(255, Math.round(c * (1 - amount)))));
+    let menuGlassMode = null;
+
+    const parseCssRgb = (value) => {
+        if (!value) return null;
+        const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (!match) return null;
+        return [parseInt(match[1], 10), parseInt(match[2], 10), parseInt(match[3], 10)];
+    };
+
+    const setMenuGlassVars = (mode) => {
+        if (menuGlassMode === mode) return;
+        menuGlassMode = mode;
+        const root = document.documentElement;
+
+        if (mode === 'dark') {
+            root.style.setProperty('--db-menu-glass-bg', 'rgba(10, 10, 10, 0.5)');
+            root.style.setProperty('--db-menu-glass-border', 'rgba(255, 255, 255, 0.08)');
+            root.style.setProperty('--db-menu-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.35)');
+            root.style.setProperty('--db-subnav-glass-shadow', '0 12px 24px rgba(0, 0, 0, 0.32)');
+            root.style.setProperty('--db-menu-glass-filter', 'blur(12px) saturate(120%)');
+        } else {
+            root.style.setProperty('--db-menu-glass-bg', 'rgba(255, 255, 255, 0.28)');
+            root.style.setProperty('--db-menu-glass-border', 'rgba(255, 255, 255, 0.35)');
+            root.style.setProperty('--db-menu-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.14)');
+            root.style.setProperty('--db-subnav-glass-shadow', '0 12px 24px rgba(0, 0, 0, 0.12)');
+            root.style.setProperty('--db-menu-glass-filter', 'blur(12px) saturate(140%)');
+        }
+    };
+
+    const updateMenuGlassTone = () => {
+        const menu = document.querySelector('#main-menu');
+        if (!menu) return;
+        const textEl = menu.querySelector('.current, a, span') || menu;
+        const color = window.getComputedStyle(textEl).color;
+        const rgb = parseCssRgb(color);
+        if (!rgb) return;
+
+        const luminance = (rgb[0] * 0.299) + (rgb[1] * 0.587) + (rgb[2] * 0.114);
+        const isLightText = luminance >= 170;
+        setMenuGlassVars(isLightText ? 'dark' : 'light');
+    };
 
     // --- 1. Background Animation Presets ---
     const ANIMATION_OPTIONS = [
@@ -164,40 +205,136 @@
                 min-height: 100vh;
             }
 
+            :root {
+                --db-menu-glass-bg: rgba(255, 255, 255, 0.28);
+                --db-menu-glass-border: rgba(255, 255, 255, 0.35);
+                --db-menu-glass-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+                --db-subnav-glass-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+                --db-menu-glass-filter: blur(12px) saturate(140%);
+            }
+
             #top {
-                background: rgba(255, 255, 255, 0.28) !important;
-                border: 1px solid rgba(255, 255, 255, 0.35);
+                background: rgba(10, 10, 10, 0.45) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08);
                 border-radius: 16px;
                 padding: 10px 14px;
-                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-                backdrop-filter: blur(16px) saturate(140%);
-                -webkit-backdrop-filter: blur(16px) saturate(140%);
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(16px) saturate(120%);
+                -webkit-backdrop-filter: blur(16px) saturate(120%);
             }
 
             #main-menu > .current {
-                background: rgba(255, 255, 255, 0.28) !important;
-                border: 1px solid rgba(255, 255, 255, 0.35);
+                background: var(--db-menu-glass-bg) !important;
+                border: 1px solid var(--db-menu-glass-border);
                 border-bottom: none;
                 border-radius: 14px 14px 0 0;
                 padding: 6px 12px;
                 margin-bottom: 0;
-                box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
-                backdrop-filter: blur(12px) saturate(140%);
-                -webkit-backdrop-filter: blur(12px) saturate(140%);
+                box-shadow: var(--db-menu-glass-shadow);
+                backdrop-filter: var(--db-menu-glass-filter);
+                -webkit-backdrop-filter: var(--db-menu-glass-filter);
                 position: relative;
                 z-index: 2;
             }
 
             #subnav-menu {
-                background: rgba(255, 255, 255, 0.28) !important;
-                border: 1px solid rgba(255, 255, 255, 0.35);
+                background: var(--db-menu-glass-bg) !important;
+                border: 1px solid var(--db-menu-glass-border);
                 border-top: none;
                 border-radius: 0 0 14px 14px;
                 padding: 8px 12px;
                 margin-top: 0;
-                box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+                box-shadow: var(--db-subnav-glass-shadow);
+                backdrop-filter: var(--db-menu-glass-filter);
+                -webkit-backdrop-filter: var(--db-menu-glass-filter);
+            }
+
+            #search-box-form {
+                display: flex;
+                align-items: stretch;
+                width: 100%;
+                max-width: 100%;
+                border-radius: 999px;
+                overflow: hidden;
+                background: rgba(255, 255, 255, 0.28) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
                 backdrop-filter: blur(12px) saturate(140%);
                 -webkit-backdrop-filter: blur(12px) saturate(140%);
+                box-sizing: border-box;
+            }
+
+            #search-box-form input,
+            #search-box-form input[type="text"],
+            #search-box-form input[type="search"] {
+                flex: 1 1 auto;
+                min-width: 0;
+                border: none;
+                background: transparent !important;
+                border-radius: 0;
+                padding: 8px 12px;
+                color: #111;
+                box-shadow: none;
+                margin: 0;
+            }
+
+            #search-box-form input::placeholder {
+                color: rgba(17, 17, 17, 0.6);
+            }
+
+            #search-box-submit {
+                border: none;
+                border-left: 1px solid rgba(255, 255, 255, 0.35);
+                background: transparent !important;
+                padding: 8px 12px;
+                color: #111;
+                box-shadow: none;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #search-box-submit .search-icon,
+            #search-box-submit svg {
+                color: #111;
+            }
+
+            #ui-id-2.ui-autocomplete,
+            .ui-autocomplete.ui-menu {
+                background: rgba(255, 255, 255, 0.32) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-radius: 14px;
+                padding: 6px;
+                box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+                backdrop-filter: blur(14px) saturate(140%);
+                -webkit-backdrop-filter: blur(14px) saturate(140%);
+                overflow: hidden;
+            }
+
+            .ui-autocomplete .ui-menu-item {
+                border-radius: 10px;
+                margin: 2px 0;
+                overflow: hidden;
+            }
+
+            .ui-autocomplete .ui-menu-item-wrapper {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 10px;
+                color: #111;
+            }
+
+            .ui-autocomplete .ui-menu-item-wrapper:hover,
+            .ui-autocomplete .ui-menu-item-wrapper.ui-state-active,
+            .ui-autocomplete .ui-menu-item-wrapper.ui-state-focus {
+                background: rgba(255, 255, 255, 0.45);
+            }
+
+            .ui-autocomplete .ui-menu-item-wrapper .post-count {
+                color: rgba(17, 17, 17, 0.7);
+                font-weight: 600;
             }
 
             #page-footer {
@@ -362,6 +499,7 @@
         }
         const existing = document.getElementById('db-accent-styles');
         if (existing) existing.remove();
+        setTimeout(updateMenuGlassTone, 0);
     };
 
     const applyAccentFromPalette = (p) => {
@@ -381,6 +519,7 @@
         const darkTextHex = rgbToHex(darkenRgb(p.colors[0], 0.6));
 
         applyAccentStyles(p, hex1, hex2, hex3, hex4, hex5, textColor1, textColor2, darkTextHex);
+        setTimeout(updateMenuGlassTone, 0);
     };
 
     const ensureVibrant = () => {
@@ -621,6 +760,7 @@
     // --- 5. Bootstrapper ---
     const initialize = () => {
         injectUI();
+        setTimeout(updateMenuGlassTone, 0);
         // Fetch and apply animated wallpaper
         fetchImageAsBase64(BACKGROUND_IMAGE_URL, (dataUrl) => {
             const style = document.createElement('style');
