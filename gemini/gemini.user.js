@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0002
+// @version      2026.05.17.0003
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -224,14 +224,30 @@
                 border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             }
 
-            /* Input Box / Textarea Composer */
-            .initial-input-area, .initial-input-area-container, new-input-ui, [class*="input-area"], .lm-input-redesign-ssr, .simplified-input-area-ssr {
+            /* Input Box & Inner Rich Textarea Composer Transparency */
+            rich-textarea, rich-textarea > div, .input-area-container, .ql-container, .bottom-container, .input-form, .center-input-container {
+                background: transparent !important;
+                background-color: transparent !important;
+            }
+            .initial-input-area, .initial-input-area-container, new-input-ui, [class*="input-area"], .lm-input-redesign-ssr, .simplified-input-area-ssr, rich-textarea {
                 background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.75)) !important;
                 backdrop-filter: blur(24px) saturate(160%) !important;
                 -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
                 border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.2)) !important;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
                 border-radius: 28px !important;
+            }
+
+            /* Greeting & Zero State Typography Glow */
+            greeting .greeting-title,
+            assistant-messages-primary h1,
+            [data-test-id="greeting-title"],
+            [data-test-id="message"] {
+                background: linear-gradient(135deg, ${hex1}, ${hex2}) !important;
+                -webkit-background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+                text-shadow: 0 0 30px ${soft} !important;
+                font-weight: 700 !important;
             }
 
             /* ===== GEMINI USER MESSAGES ===== */
@@ -329,6 +345,10 @@
             }
 
             /* ===== USER PROMPT & INTENT CHIPS ===== */
+            intent-chips-block button,
+            intent-card button,
+            button.card-zero-state,
+            .card-zero-state,
             user-prompt-chip,
             .user-prompt-chip,
             .mat-mdc-standard-chip,
@@ -336,13 +356,18 @@
             intent-card,
             [data-test-id="intent-chip"] {
                 background-color: var(--tm-glass-bg, rgba(255, 255, 255, 0.1)) !important;
-                backdrop-filter: blur(12px) !important;
-                -webkit-backdrop-filter: blur(12px) !important;
+                backdrop-filter: blur(16px) saturate(140%) !important;
+                -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
                 border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
                 color: var(--text-primary, inherit) !important;
-                border-radius: 16px !important;
-                transition: all 0.3s ease !important;
+                border-radius: 20px !important;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
             }
+            intent-chips-block button:hover,
+            intent-card button:hover,
+            button.card-zero-state:hover,
+            .card-zero-state:hover,
             user-prompt-chip:hover,
             .user-prompt-chip:hover,
             .mat-mdc-standard-chip:hover,
@@ -351,8 +376,9 @@
             [data-test-id="intent-chip"]:hover {
                 border-color: ${hex1} !important;
                 background-color: ${selection} !important;
-                box-shadow: 0 0 15px ${p.rgba(p.colors[0], 0.3)} !important;
-                transform: translateY(-2px) !important;
+                box-shadow: 0 8px 25px ${selection}, 0 0 15px ${hex1} !important;
+                transform: translateY(-3px) scale(1.02) !important;
+                color: var(--tm-accent-text, #fff) !important;
             }
 
             /* ===== MENUS, DIALOGS, CARDS & MODALS ===== */
