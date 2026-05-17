@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0002
+// @version      2026.05.17.0003
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -45,29 +45,73 @@
     const getTextColor = SharedUI.getTextColor;
     const parseCssRgb = SharedUI.parseCssRgb;
 
+    // =================================================================
+    // GLASSMORPHISM & BLUR CONFIGURATION
+    // =================================================================
+
+    const GLASS_CONFIG = {
+        blurs: {
+            subtle: '1px',
+            button: '10px',
+            sidebar: '12px',
+            code: '12px',
+            default: '16px',
+            panel: '20px',
+            dialog: '24px',
+            deep: '25px',
+        },
+        saturate: {
+            low: '120%',
+            medium: '140%',
+            high: '160%',
+        },
+        dark: {
+            bg: 'rgba(10, 10, 10, 0.5)',
+            strongBg: 'rgba(0, 0, 0, 0.6)',
+            headerBg: 'rgba(10, 10, 10, 0.45)',
+            border: 'rgba(255, 255, 255, 0.08)',
+            shadow: '0 10px 22px rgba(0, 0, 0, 0.35)',
+        },
+        light: {
+            bg: 'rgba(255, 255, 255, 0.35)',
+            strongBg: 'rgba(255, 255, 255, 0.6)',
+            headerBg: 'rgba(255, 255, 255, 0.45)',
+            border: 'rgba(255, 255, 255, 0.35)',
+            shadow: '0 10px 22px rgba(0, 0, 0, 0.14)',
+        }
+    };
+
     let glassMode = null;
 
     const setGlassVars = (mode) => {
         if (glassMode === mode) return;
         glassMode = mode;
         const root = document.documentElement;
+        const theme = mode === 'dark' ? GLASS_CONFIG.dark : GLASS_CONFIG.light;
+        const sat = mode === 'dark' ? GLASS_CONFIG.saturate.low : GLASS_CONFIG.saturate.medium;
 
-        if (mode === 'dark') {
-            root.style.setProperty('--tm-glass-bg', 'rgba(10, 10, 10, 0.5)');
-            root.style.setProperty('--tm-glass-strong-bg', 'rgba(0, 0, 0, 0.6)');
-            root.style.setProperty('--tm-glass-header-bg', 'rgba(10, 10, 10, 0.45)');
-            root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.08)');
-            root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.35)');
-            root.style.setProperty('--tm-glass-filter', 'blur(16px) saturate(120%)');
-        } else {
-            root.style.setProperty('--tm-glass-bg', 'rgba(255, 255, 255, 0.35)');
-            root.style.setProperty('--tm-glass-strong-bg', 'rgba(255, 255, 255, 0.6)');
-            root.style.setProperty('--tm-glass-header-bg', 'rgba(255, 255, 255, 0.45)');
-            root.style.setProperty('--tm-glass-border', 'rgba(255, 255, 255, 0.35)');
-            root.style.setProperty('--tm-glass-shadow', '0 10px 22px rgba(0, 0, 0, 0.14)');
-            root.style.setProperty('--tm-glass-filter', 'blur(16px) saturate(140%)');
-        }
+        root.style.setProperty('--tm-glass-bg', theme.bg);
+        root.style.setProperty('--tm-glass-strong-bg', theme.strongBg);
+        root.style.setProperty('--tm-glass-header-bg', theme.headerBg);
+        root.style.setProperty('--tm-glass-border', theme.border);
+        root.style.setProperty('--tm-glass-shadow', theme.shadow);
+        root.style.setProperty('--tm-glass-filter', `blur(${GLASS_CONFIG.blurs.default}) saturate(${sat})`);
+
+        root.style.setProperty('--tm-blur-subtle', `blur(${GLASS_CONFIG.blurs.subtle})`);
+        root.style.setProperty('--tm-blur-button', `blur(${GLASS_CONFIG.blurs.button})`);
+        root.style.setProperty('--tm-blur-sidebar', `blur(${GLASS_CONFIG.blurs.sidebar})`);
+        root.style.setProperty('--tm-blur-code', `blur(${GLASS_CONFIG.blurs.code})`);
+        root.style.setProperty('--tm-blur-default', `blur(${GLASS_CONFIG.blurs.default})`);
+        root.style.setProperty('--tm-blur-panel', `blur(${GLASS_CONFIG.blurs.panel})`);
+        root.style.setProperty('--tm-blur-dialog', `blur(${GLASS_CONFIG.blurs.dialog})`);
+        root.style.setProperty('--tm-blur-deep', `blur(${GLASS_CONFIG.blurs.deep})`);
+
+        root.style.setProperty('--tm-filter-user-msg', `blur(${GLASS_CONFIG.blurs.default}) saturate(${GLASS_CONFIG.saturate.medium})`);
+        root.style.setProperty('--tm-filter-asst-msg', `blur(${GLASS_CONFIG.blurs.default}) saturate(${GLASS_CONFIG.saturate.low})`);
+        root.style.setProperty('--tm-filter-dialog', `blur(${GLASS_CONFIG.blurs.dialog}) saturate(${GLASS_CONFIG.saturate.high})`);
     };
+
+    setGlassVars('dark');
 
     const updateGlassTone = () => {
         const sample = document.querySelector('#page-header') || document.body;
@@ -255,8 +299,8 @@
             [data-turn="user"] .user-message-bubble-color,
             div[data-message-author-role="user"].text-message .user-message-bubble-color {
                 background-color: ${p.rgba(p.colors[0], 0.85)} !important;
-                backdrop-filter: blur(16px) saturate(140%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+                backdrop-filter: var(--tm-filter-user-msg) !important;
+                -webkit-backdrop-filter: var(--tm-filter-user-msg) !important;
                 color: ${textColor1} !important;
                 border: 1px solid ${p.rgba(p.colors[0], 0.3)} !important;
                 box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
@@ -264,8 +308,8 @@
             [data-turn="assistant"] .markdown,
             div[data-message-author-role="assistant"].text-message .markdown {
                 background-color: rgba(15, 15, 15, 0.8) !important;
-                backdrop-filter: blur(16px) saturate(120%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+                backdrop-filter: var(--tm-filter-asst-msg) !important;
+                -webkit-backdrop-filter: var(--tm-filter-asst-msg) !important;
                 border: 1px solid rgba(255, 255, 255, 0.08) !important;
                 border-radius: 20px !important;
                 padding: 18px 24px !important;
@@ -390,8 +434,8 @@
         html, body { background-color: transparent !important; }
         .bg-token-main-surface-primary {
             background-color: transparent !important;
-            -webkit-backdrop-filter: blur(1px);
-            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: var(--tm-blur-subtle);
+            backdrop-filter: var(--tm-blur-subtle);
         }
         [data-radix-popper-content-wrapper] > div,
         [data-radix-menu-content],
@@ -399,8 +443,8 @@
         [role="dialog"],
         .popover {
             background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.85)) !important;
-            backdrop-filter: blur(24px) saturate(160%) !important;
-            -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+            backdrop-filter: var(--tm-filter-dialog) !important;
+            -webkit-backdrop-filter: var(--tm-filter-dialog) !important;
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
             border-radius: 20px !important;
@@ -415,14 +459,14 @@
         [data-turn="user"] .user-message-bubble-color,
         div[data-message-author-role="user"].text-message .user-message-bubble-color {
             background-color: var(--tm-glass-strong-bg, rgba(20,20,20, 0.85)) !important;
-            backdrop-filter: blur(16px) saturate(140%) !important;
-            -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+            backdrop-filter: var(--tm-filter-user-msg) !important;
+            -webkit-backdrop-filter: var(--tm-filter-user-msg) !important;
         }
         [data-turn="assistant"] .markdown,
         div[data-message-author-role="assistant"].text-message .markdown {
             background-color: var(--tm-glass-strong-bg, rgba(15,15,15, 0.8)) !important;
-            backdrop-filter: blur(16px) saturate(120%) !important;
-            -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+            backdrop-filter: var(--tm-filter-asst-msg) !important;
+            -webkit-backdrop-filter: var(--tm-filter-asst-msg) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 20px !important;
             padding: 18px 24px !important;
@@ -431,8 +475,8 @@
         [data-turn="assistant"] pre:not(:has(.cm-editor)):not(.cm-content),
         div[data-message-author-role="assistant"].text-message pre:not(:has(.cm-editor)):not(.cm-content) {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: var(--tm-blur-code) !important;
+            backdrop-filter: var(--tm-blur-code) !important;
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             border-radius: 20px !important;
             overflow: hidden !important;
@@ -449,8 +493,8 @@
         [data-turn="assistant"] pre:has(.cm-editor) .bg-token-bg-elevated-secondary,
         div[data-message-author-role="assistant"].text-message pre:has(.cm-editor) .bg-token-bg-elevated-secondary {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: var(--tm-blur-code) !important;
+            backdrop-filter: var(--tm-blur-code) !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
         }
         [data-turn="assistant"] pre:has(.cm-editor) .border-token-border-light,
@@ -467,8 +511,8 @@
         }
         div[role="presentation"] div.group div.flex {
             background-color: rgba(10,10,10, 0) !important;
-            -webkit-backdrop-filter: blur(25px);
-            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: var(--tm-blur-deep);
+            backdrop-filter: var(--tm-blur-deep);
         }
         #stage-slideover-sidebar,
         #stage-slideover-sidebar > div,
@@ -532,21 +576,21 @@
         #stage-slideover-sidebar {
             background-color: var(--tm-glass-bg, rgba(10, 10, 10, 0.35)) !important;
             border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
-            -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: var(--tm-blur-sidebar);
+            backdrop-filter: var(--tm-blur-sidebar);
         }
         #thread-bottom [data-composer-surface="true"], #thread-bottom .bg-token-bg-primary {
             background-color: var(--tm-glass-bg, rgba(0, 0, 0, 0.4)) !important;
-            -webkit-backdrop-filter: blur(16px);
-            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: var(--tm-blur-default);
+            backdrop-filter: var(--tm-blur-default);
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
             border-radius: 28px !important;
         }
         #thread-bottom-container button[class*="bg-token-bg-primary"] {
             background-color: var(--tm-glass-bg, rgba(10, 10, 10, 0.45)) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
+            backdrop-filter: var(--tm-blur-sidebar) !important;
+            -webkit-backdrop-filter: var(--tm-blur-sidebar) !important;
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
         }
         div[class*="sm:gap-3"] button[class*="rounded"],
@@ -778,7 +822,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: var(--tm-glass-filter, blur(10px));
+            backdrop-filter: var(--tm-blur-button, blur(10px));
             transition: all 0.3s ease;
             font-size: 20px;
             transform: translateZ(0);
@@ -799,7 +843,7 @@
             padding: 20px;
             /* ensure panel sits above animated background */
             z-index: 2147483647 !important;
-            backdrop-filter: var(--tm-glass-filter, blur(20px));
+            backdrop-filter: var(--tm-blur-panel, blur(20px));
             box-shadow: var(--tm-glass-shadow, 0 10px 40px rgba(0,0,0,0.5));
             transform: translateY(20px);
             opacity: 0;
