@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0006
+// @version      2026.05.17.0007
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -12,6 +12,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/color-utils.js
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/vibrant-loader.js
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/animations.js
+// @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.global.min.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue

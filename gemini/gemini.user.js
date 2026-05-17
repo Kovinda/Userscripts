@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0015
+// @version      2026.05.17.0016
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -9,6 +9,7 @@
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/color-utils.js
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/vibrant-loader.js
 // @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/animations.js
+// @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.global.min.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue

@@ -477,7 +477,7 @@ window.SharedUI.motionPresets = {
     }
 };
 
-window.SharedUI.animateWithMotion = async (element, animName, options = {}) => {
+window.SharedUI.animateWithMotion = (element, animName, options = {}) => {
     if (!element) return;
     const preset = window.SharedUI.motionPresets[animName] || window.SharedUI.motionPresets.sweepDown;
     const duration = parseFloat(options.duration) || 1.5;
@@ -488,11 +488,10 @@ window.SharedUI.animateWithMotion = async (element, animName, options = {}) => {
         Object.assign(element.style, preset.initial);
     }
 
-    try {
-        const { animate } = await import("https://cdn.jsdelivr.net/npm/motion@11.13.5/mini/+esm");
-        return animate(element, preset.target, { duration, ease });
-    } catch (err) {
-        console.error("[SharedUI] Motion JS import/animation failed:", err);
+    if (typeof Motion !== "undefined" && Motion.animate) {
+        return Motion.animate(element, preset.target, { duration, ease });
+    } else {
+        console.error("[SharedUI] Motion JS global not found. Ensure @require https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.global.min.js is in script header.");
     }
 };
 
