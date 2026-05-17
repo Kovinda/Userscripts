@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0008
+// @version      2026.05.17.0010
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -314,6 +314,10 @@
             }
 
             /* ===== SCROLLBARS & SCROLLER OVERLAYS ===== */
+            * {
+                scrollbar-color: var(--tm-glass-border, rgba(255, 255, 255, 0.25)) var(--tm-glass-bg, rgba(10, 10, 10, 0.2)) !important;
+                scrollbar-width: thin !important;
+            }
             .top-gradient-container, .top-gradient,
             .bottom-gradient-container, .bottom-gradient {
                 display: none !important;
