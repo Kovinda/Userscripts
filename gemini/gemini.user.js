@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0006
+// @version      2026.05.17.0007
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -213,19 +213,24 @@
             }
 
             /* Top Bar / Header */
-            header[class*="gb_"], .boqOnegoogleliteOgbOneGoogleBar, #gb {
+            header[class*="gb_"] {
                 background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
                 backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
                 -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
                 border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
                 box-shadow: var(--tm-glass-shadow, 0 8px 20px rgba(0, 0, 0, 0.3)) !important;
             }
+            .boqOnegoogleliteOgbOneGoogleBar, #gb, .gb_e, .gb_d,
             header[class*="gb_"] a, header[class*="gb_"] div:not([role="menu"]):not(.gb_menu),
             #gb a, #gb div:not([role="menu"]):not(.gb_menu),
             .boqOnegoogleliteOgbOneGoogleBar a, .boqOnegoogleliteOgbOneGoogleBar div:not([role="menu"]):not(.gb_menu),
             user-profile-picture {
                 background: transparent !important;
                 background-color: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border: none !important;
+                box-shadow: none !important;
             }
 
             /* Sidenav / Sidebar */
@@ -413,6 +418,9 @@
                 background: transparent !important;
                 padding: 0 !important;
             }
+            a.mat-mdc-menu-item,
+            button.mat-mdc-menu-item,
+            div.mat-mdc-menu-item,
             .mat-mdc-menu-item,
             .mat-mdc-list-item {
                 background: transparent !important;
@@ -423,20 +431,24 @@
                 display: flex !important;
                 align-items: center !important;
                 width: auto !important;
+                box-sizing: border-box !important;
             }
-            .mat-mdc-menu-item:hover,
-            .mat-mdc-list-item:hover,
-            .mat-mdc-menu-item:focus,
-            .mat-mdc-list-item:focus {
+            a.mat-mdc-menu-item:hover, button.mat-mdc-menu-item:hover, div.mat-mdc-menu-item:hover,
+            .mat-mdc-menu-item:hover, .mat-mdc-list-item:hover,
+            a.mat-mdc-menu-item:focus, button.mat-mdc-menu-item:focus, div.mat-mdc-menu-item:focus,
+            .mat-mdc-menu-item:focus, .mat-mdc-list-item:focus {
                 background-color: ${selection} !important;
                 color: ${textColor1} !important;
                 box-shadow: 0 4px 15px ${selection} !important;
                 transform: translateX(4px) !important;
+                border-radius: 14px !important;
             }
             .mat-mdc-menu-item .mat-ripple,
             .mat-mdc-menu-ripple,
             .mat-mdc-menu-item::before,
-            .mat-mdc-menu-item::after {
+            .mat-mdc-menu-item::after,
+            .mat-mdc-menu-item .mat-mdc-menu-item-text::before,
+            .mat-mdc-menu-item .mat-mdc-menu-item-text::after {
                 display: none !important;
                 opacity: 0 !important;
             }
