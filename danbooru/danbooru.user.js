@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Enhancer & Animated Backgrounds
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0003
+// @version      2026.05.17.0001
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -79,9 +79,9 @@
     };
 
     // --- 1. Background Animation Presets ---
-    const ANIMATION_OPTIONS = SharedUI.ANIMATION_OPTIONS;
+    const ANIMATION_OPTIONS = SharedUI.MOTION_OPTIONS || SharedUI.ANIMATION_OPTIONS;
     const EASING_OPTIONS = SharedUI.EASING_OPTIONS;
-    const animationPresets = SharedUI.animationPresets;
+    const animationPresets = SharedUI.motionPresets || SharedUI.animationPresets;
 
     // --- 2. URL Redirection Logic (Runs instantly) ---
     const url = new URL(window.location.href);
@@ -125,9 +125,7 @@
 
     // --- 3. Background Logic & Dynamic CSS ---
     const buildBackgroundCss = (imageDataUrl) => {
-        const preset = animationPresets[bgAnimation] || animationPresets.sweepDown;
         return `
-            ${preset.keyframes}
 
             /* Make default danbooru body transparent to show background underneath */
             body {
@@ -315,21 +313,6 @@
             }
 
             /* ========================================================= */
-
-            /* Apply custom background to body::before so it animates without clipping Danbooru's UI */
-            body::before {
-                content: "";
-                position: fixed;
-                top: 0; left: 0; width: 100vw; height: 100vh;
-                z-index: -9999;
-                background-image: linear-gradient(${OVERLAY_COLOR}, ${OVERLAY_COLOR}), url('${imageDataUrl}');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                ${preset.initial}
-                will-change: clip-path, transform, opacity, filter;
-                animation: bgReveal ${bgDuration}s ${bgEasing} forwards;
-            }
         `;
     };
 
@@ -653,6 +636,21 @@
             style.id = 'danbooru-bg-style';
             style.textContent = buildBackgroundCss(dataUrl);
             document.head.appendChild(style);
+
+            const container = document.createElement('div');
+            container.id = 'danbooru-custom-bg';
+            container.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -9999; pointer-events: none; overflow: hidden;';
+            container.innerHTML = `<div id="danbooru-bg-image" style="position: absolute; inset: 0; width: 100%; height: 100%; background-image: linear-gradient(${OVERLAY_COLOR}, ${OVERLAY_COLOR}), url('${dataUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat; will-change: clip-path, transform, opacity, filter;"></div>`;
+            document.body.appendChild(container);
+
+            const bgElem = container.querySelector('#danbooru-bg-image');
+            if (bgElem && SharedUI.animateWithMotion) {
+                SharedUI.animateWithMotion(bgElem, bgAnimation, {
+                    duration: Number.parseFloat(bgDuration) || 1.5,
+                    ease: bgEasing
+                });
+            }
+
             extractPaletteFromDataUrl(dataUrl);
         });
     };

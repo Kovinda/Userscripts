@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0005
+// @version      2026.05.17.0006
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -36,7 +36,7 @@
         accentMode: true  // Toggle for accent colors from wallpaper
     };
 
-    const ANIMATION_OPTIONS = SharedUI.ANIMATION_OPTIONS;
+    const ANIMATION_OPTIONS = SharedUI.MOTION_OPTIONS || SharedUI.ANIMATION_OPTIONS;
     const EASING_OPTIONS = SharedUI.EASING_OPTIONS;
 
     // Load saved settings or use defaults
@@ -147,7 +147,7 @@
     // PART 1: Background, Sweep & Dynamic Color Extraction
     // =================================================================
 
-    const animationPresets = SharedUI.animationPresets;
+    const animationPresets = SharedUI.motionPresets || SharedUI.animationPresets;
 
     const imageUrl = `http://127.0.0.1:8190/ActiveBackground.jpg?rand=${Math.random()}`;
 
@@ -159,30 +159,20 @@
             const reader = new FileReader();
             reader.onloadend = function() {
                 const dataUrl = reader.result;
-                const preset = animationPresets[BACKGROUND_ANIMATION] || animationPresets.sweepDown;
 
-                GM_addStyle(`
-                    ${preset.keyframes}
-                    body::before {
-                        content: "";
-                        position: fixed;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        /* keep the background strictly behind UI */
-                        z-index: -9999;
-                        display: block;
-                        background-image: url('${dataUrl}');
-                        background-size: cover;
-                        background-position: center;
-                        width: 100%; height: 100%;
-                        filter: brightness(50%);
-                        ${preset.initial}
-                        /* hint to browser to optimize clip-path animation */
-                        will-change: clip-path, transform;
-                        backface-visibility: hidden;
-                        animation: bgReveal ${ANIMATION_DURATION} ${ANIMATION_EASING} forwards;
-                        pointer-events: none;
-                    }
-                `);
+                const bgContainer = document.createElement('div');
+                bgContainer.id = 'chatgpt-custom-bg';
+                bgContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -9999; pointer-events: none; overflow: hidden;';
+                bgContainer.innerHTML = `<div id="chatgpt-bg-image" style="position: absolute; inset: 0; width: 100%; height: 100%; background-image: url('${dataUrl}'); background-size: cover; background-position: center; filter: brightness(50%); will-change: clip-path, transform, opacity, filter;"></div>`;
+                document.body.appendChild(bgContainer);
+
+                const bgElem = bgContainer.querySelector('#chatgpt-bg-image');
+                if (bgElem && SharedUI.animateWithMotion) {
+                    SharedUI.animateWithMotion(bgElem, BACKGROUND_ANIMATION, {
+                        duration: Number.parseFloat(ANIMATION_DURATION) || 1.5,
+                        ease: ANIMATION_EASING
+                    });
+                }
 
                 extractPaletteFromDataUrl(dataUrl);
             };

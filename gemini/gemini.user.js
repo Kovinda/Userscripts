@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0014
+// @version      2026.05.17.0015
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -52,9 +52,9 @@
 
     let settings = Object.assign({}, DEFAULT_SETTINGS, safeGetValue('bgSettings', {}));
 
-    const ANIMATION_OPTIONS = SharedUI.ANIMATION_OPTIONS;
+    const ANIMATION_OPTIONS = SharedUI.MOTION_OPTIONS || SharedUI.ANIMATION_OPTIONS;
     const EASING_OPTIONS = SharedUI.EASING_OPTIONS;
-    const animationPresets = SharedUI.animationPresets;
+    const animationPresets = SharedUI.motionPresets || SharedUI.animationPresets;
     const getTextColor = SharedUI.getTextColor;
     const parseCssRgb = SharedUI.parseCssRgb;
 
@@ -730,7 +730,6 @@
         const chipsDelay = (durationSeconds + 0.66).toFixed(2);
 
         return `
-            ${preset.keyframes}
 
             @keyframes textGlitch {
                 0%, 92% { text-shadow: none; transform: translate(0); }
@@ -799,10 +798,8 @@
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
-                ${preset.initial}
                 will-change: clip-path, transform, opacity, filter;
                 backface-visibility: hidden;
-                animation: bgReveal ${duration} ${easing} forwards;
             }
 
             [data-test-id="bard-text"].bard-text {
@@ -1230,6 +1227,15 @@
         container.id = 'gemini-custom-bg';
         container.innerHTML = '<div id="gemini-bg-image"></div>';
         document.body.appendChild(container);
+
+        const bgElem = container.querySelector('#gemini-bg-image');
+        if (bgElem && SharedUI.animateWithMotion) {
+            const durationSeconds = Number.parseFloat(settings.duration || DEFAULT_SETTINGS.duration) || 1.5;
+            SharedUI.animateWithMotion(bgElem, settings.animation, {
+                duration: durationSeconds,
+                ease: settings.easing || DEFAULT_SETTINGS.easing
+            });
+        }
 
         applyRuntimeFixes();
         tryApplyQuoteToPrompt();
