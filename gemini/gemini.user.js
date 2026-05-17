@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0007
+// @version      2026.05.17.0008
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -251,9 +251,9 @@
 
             /* Precise Single Glass Layer for the Input Composer Bar */
             fieldset.input-area-container, .input-area-container, .initial-input-area-container, .chat-input-container, [data-test-id="chat-input-container"] {
-                background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.75)) !important;
-                backdrop-filter: blur(24px) saturate(160%) !important;
-                -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+                background-color: var(--tm-glass-input-bg, rgba(20, 20, 20, 0.45)) !important;
+                backdrop-filter: blur(20px) saturate(140%) !important;
+                -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
                 border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.2)) !important;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
                 border-radius: 28px !important;
@@ -313,23 +313,31 @@
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
             }
 
-            /* ===== SCROLLBAR ===== */
+            /* ===== SCROLLBARS & SCROLLER OVERLAYS ===== */
+            .top-gradient-container, .top-gradient,
+            .bottom-gradient-container, .bottom-gradient {
+                display: none !important;
+                opacity: 0 !important;
+                background: transparent !important;
+            }
             ::-webkit-scrollbar {
-                width: 10px;
-                height: 10px;
+                width: 8px;
+                height: 8px;
             }
             ::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 5px;
+                background: var(--tm-glass-bg, rgba(10, 10, 10, 0.2)) !important;
+                border-radius: 10px;
             }
             ::-webkit-scrollbar-thumb {
-                background: linear-gradient(180deg, ${hex1}, ${hex2}) !important;
-                border-radius: 5px;
-                border: 2px solid transparent;
-                background-clip: padding-box;
+                background: var(--tm-glass-border, rgba(255, 255, 255, 0.25)) !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+                border-radius: 10px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1) !important;
             }
             ::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(180deg, ${hex2}, ${hex1}) !important;
+                background: var(--tm-selection, rgba(255, 255, 255, 0.45)) !important;
             }
 
             /* ===== SUBMIT BUTTON ===== */
@@ -366,6 +374,17 @@
             }
 
             /* ===== USER PROMPT & INTENT CHIPS ===== */
+            intent-card, intent-card:hover, intent-card:focus, intent-card:focus-within,
+            intent-card::before, intent-card::after,
+            intent-card button::before, intent-card button::after,
+            button.card-zero-state::before, button.card-zero-state::after,
+            .mat-mdc-focus-indicator, .mdc-elevation-overlay {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                outline: none !important;
+                opacity: 0 !important;
+            }
             intent-card button,
             button.card-zero-state,
             user-prompt-chip,
@@ -378,9 +397,10 @@
                 -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
                 border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
                 color: var(--text-primary, inherit) !important;
-                border-radius: 20px !important;
+                border-radius: 100px !important;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+                outline: none !important;
             }
             intent-card button:hover,
             button.card-zero-state:hover,
@@ -394,6 +414,8 @@
                 box-shadow: 0 8px 25px ${selection}, 0 0 15px ${hex1} !important;
                 transform: translateY(-3px) scale(1.02) !important;
                 color: var(--tm-accent-text, #fff) !important;
+                outline: none !important;
+                border-radius: 100px !important;
             }
 
             /* ===== MENUS, DIALOGS, CARDS & MODALS ===== */
