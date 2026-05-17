@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0004
+// @version      2026.05.17.0005
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -203,7 +203,7 @@
             }
 
             /* ===== UI TRANSPARENCY & STRIP WRAPPER BACKGROUNDS ===== */
-            html, body, chat-app, modular-zero-state, .modular-zero-state-container, .blur-bg, zero-state-block-picker, .zero-state-block-container, .top-section-container, .bottom-section-container, intent-chips-block, intent-card-bar, .card-container, .scroll-container, .mat-app-background, .theme-host, [class*="theme"], intent-card, .initial-input-area, .input-area, rich-textarea, new-input-ui, .rich-textarea-container, .ql-container, .ql-editor, .bottom-container, .input-form, .center-input-container {
+            html, body, chat-app, modular-zero-state, .modular-zero-state-container, .blur-bg, zero-state-block-picker, .zero-state-block-container, .top-section-container, .bottom-section-container, intent-chips-block, intent-card-bar, .card-container, .scroll-container, .mat-app-background, .theme-host, [class*="theme"], intent-card {
                 background: transparent !important;
                 background-color: transparent !important;
                 backdrop-filter: none !important;
@@ -229,8 +229,16 @@
                 border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             }
 
+            /* Inner Input Wrappers Transparency */
+            input-container, input-area-v2, .input-area, .text-input-field, .text-input-field-main-area, .text-input-field_textarea-wrapper, rich-textarea, rich-textarea > div, .rich-textarea-container, .ql-container, .ql-editor, .bottom-container, .input-form, .center-input-container {
+                background: transparent !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
             /* Precise Single Glass Layer for the Input Composer Bar */
-            .initial-input-area-container, .chat-input-container, [data-test-id="chat-input-container"] {
+            fieldset.input-area-container, .input-area-container, .initial-input-area-container, .chat-input-container, [data-test-id="chat-input-container"] {
                 background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.75)) !important;
                 backdrop-filter: blur(24px) saturate(160%) !important;
                 -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
