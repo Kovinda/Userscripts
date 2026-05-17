@@ -491,7 +491,7 @@ window.SharedUI.animateWithMotion = (element, animName, options = {}) => {
     if (typeof Motion !== "undefined" && Motion.animate) {
         return Motion.animate(element, preset.target, { duration, ease });
     } else {
-        console.error("[SharedUI] Motion JS global not found. Ensure @require https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.global.min.js is in script header.");
+        console.error("[SharedUI] Motion JS global not found. Ensure @require https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js is in script header.");
     }
 };
 
