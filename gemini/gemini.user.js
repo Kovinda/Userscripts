@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0005
+// @version      2026.05.17.0006
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -213,12 +213,19 @@
             }
 
             /* Top Bar / Header */
-            header[class*="gb_"], .boqOnegoogleliteOgbOneGoogleBar {
+            header[class*="gb_"], .boqOnegoogleliteOgbOneGoogleBar, #gb {
                 background-color: var(--tm-glass-header-bg, rgba(10, 10, 10, 0.45)) !important;
                 backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
                 -webkit-backdrop-filter: var(--tm-glass-filter, blur(16px) saturate(120%)) !important;
                 border-bottom: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
                 box-shadow: var(--tm-glass-shadow, 0 8px 20px rgba(0, 0, 0, 0.3)) !important;
+            }
+            header[class*="gb_"] a, header[class*="gb_"] div:not([role="menu"]):not(.gb_menu),
+            #gb a, #gb div:not([role="menu"]):not(.gb_menu),
+            .boqOnegoogleliteOgbOneGoogleBar a, .boqOnegoogleliteOgbOneGoogleBar div:not([role="menu"]):not(.gb_menu),
+            user-profile-picture {
+                background: transparent !important;
+                background-color: transparent !important;
             }
 
             /* Sidenav / Sidebar */
@@ -385,6 +392,7 @@
             }
 
             /* ===== MENUS, DIALOGS, CARDS & MODALS ===== */
+            .cdk-overlay-pane .mat-mdc-menu-panel,
             .mat-mdc-menu-panel,
             .mat-mdc-card,
             .goog-modalpopup,
@@ -392,17 +400,45 @@
             .mat-mdc-dialog-surface,
             .cdk-dialog-container,
             .mat-bottom-sheet-container {
+                background: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.85)) !important;
                 background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.85)) !important;
-                backdrop-filter: blur(24px) saturate(160%) !important;
-                -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
-                border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
-                border-radius: 20px !important;
+                backdrop-filter: blur(28px) saturate(180%) !important;
+                -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+                border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.2)) !important;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.05) !important;
+                border-radius: 24px !important;
+                padding: 8px !important;
+            }
+            .mat-mdc-menu-content {
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            .mat-mdc-menu-item,
+            .mat-mdc-list-item {
+                background: transparent !important;
+                border-radius: 14px !important;
+                margin: 4px 6px !important;
+                padding: 12px 18px !important;
+                transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+                display: flex !important;
+                align-items: center !important;
+                width: auto !important;
             }
             .mat-mdc-menu-item:hover,
-            .mat-mdc-list-item:hover {
+            .mat-mdc-list-item:hover,
+            .mat-mdc-menu-item:focus,
+            .mat-mdc-list-item:focus {
                 background-color: ${selection} !important;
-                border-radius: 12px !important;
+                color: ${textColor1} !important;
+                box-shadow: 0 4px 15px ${selection} !important;
+                transform: translateX(4px) !important;
+            }
+            .mat-mdc-menu-item .mat-ripple,
+            .mat-mdc-menu-ripple,
+            .mat-mdc-menu-item::before,
+            .mat-mdc-menu-item::after {
+                display: none !important;
+                opacity: 0 !important;
             }
 
             /* ===== SELECTION & LINKS ===== */
