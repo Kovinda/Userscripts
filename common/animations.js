@@ -410,3 +410,89 @@ window.SharedUI.animationPresets = {
         initial: "clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; transform: scale(0.5);"
     }
 };
+
+// =================================================================
+// MOTION JS (motion.dev / Motion One) MINI PRESETS & INTEGRATION
+// =================================================================
+
+window.SharedUI.MOTION_OPTIONS = [
+    { value: "sweepDown", label: "Sweep Down", desc: "Smooth cinematic reveal from top to bottom" },
+    { value: "fadeIn", label: "Fade In", desc: "Subtle alpha fade transition" },
+    { value: "zoomIn", label: "Zoom In", desc: "Smooth scale expansion from center" },
+    { value: "blur", label: "Focus Blur", desc: "Premium camera focus pull effect" },
+    { value: "circleOut", label: "Circle Out", desc: "Expanding circular aperture reveal" },
+    { value: "rhombusReveal", label: "Diamond Reveal", desc: "Center diamond expanding outward" },
+    { value: "glitchReveal", label: "Cyber Glitch", desc: "Futuristic multi-stripe slice reveal" },
+    { value: "starBurst", label: "Star Burst", desc: "Dynamic 10-point starburst reveal" }
+];
+
+window.SharedUI.motionPresets = {
+    sweepDown: {
+        initial: { clipPath: "inset(0px 0px 100% 0px)" },
+        target: { clipPath: ["inset(0px 0px 100% 0px)", "inset(0px 0px 0px 0px)"] }
+    },
+    fadeIn: {
+        initial: { opacity: "0" },
+        target: { opacity: [0, 1] }
+    },
+    zoomIn: {
+        initial: { opacity: "0", transform: "scale(0.6)" },
+        target: { opacity: [0, 1], scale: [0.6, 1] }
+    },
+    blur: {
+        initial: { opacity: "0", filter: "blur(30px)", transform: "scale(1.05)" },
+        target: { opacity: [0, 1], filter: ["blur(30px)", "blur(0px)"], scale: [1.05, 1] }
+    },
+    circleOut: {
+        initial: { clipPath: "circle(0% at 50% 50%)", opacity: "0" },
+        target: { clipPath: ["circle(0% at 50% 50%)", "circle(150% at 50% 50%)"], opacity: [0, 1] }
+    },
+    rhombusReveal: {
+        initial: { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", opacity: "0" },
+        target: { clipPath: ["polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", "polygon(50% -150%, 250% 50%, 50% 250%, -150% 50%)"], opacity: [0, 1] }
+    },
+    glitchReveal: {
+        initial: { clipPath: "polygon(0 0, 0 0, 0 33%, 0 33%, 100% 33%, 100% 33%, 100% 67%, 100% 67%, 0 67%, 0 67%, 0 100%, 0 100%)", opacity: "0" },
+        target: { 
+            clipPath: [
+                "polygon(0 0, 0 0, 0 33%, 0 33%, 100% 33%, 100% 33%, 100% 67%, 100% 67%, 0 67%, 0 67%, 0 100%, 0 100%)",
+                "polygon(0 0, 35% 0, 35% 33%, 0 33%, 100% 33%, 65% 33%, 65% 67%, 100% 67%, 0 67%, 40% 67%, 40% 100%, 0 100%)",
+                "polygon(0 0, 80% 0, 80% 33%, 0 33%, 100% 33%, 20% 33%, 20% 67%, 100% 67%, 0 67%, 85% 67%, 85% 100%, 0 100%)",
+                "polygon(0 0, 100% 0, 100% 33%, 0 33%, 100% 33%, 0 33%, 0 67%, 100% 67%, 0 67%, 100% 67%, 100% 100%, 0 100%)"
+            ], 
+            opacity: [0, 0.6, 0.9, 1] 
+        }
+    },
+    starBurst: {
+        initial: { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%)", opacity: "0", transform: "rotate(-90deg) scale(0.5)" },
+        target: { 
+            clipPath: [
+                "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%)",
+                "polygon(50% -350%, 167% -111%, 430% -73%, 240% 111%, 284% 373%, 50% 250%, -184% 373%, -140% 111%, -330% -73%, -67% -111%)"
+            ], 
+            opacity: [0, 1], 
+            rotate: [-90, 0], 
+            scale: [0.5, 1] 
+        }
+    }
+};
+
+window.SharedUI.animateWithMotion = async (element, animName, options = {}) => {
+    if (!element) return;
+    const preset = window.SharedUI.motionPresets[animName] || window.SharedUI.motionPresets.sweepDown;
+    const duration = parseFloat(options.duration) || 1.5;
+    const ease = options.ease || "ease-out";
+
+    // Set initial resting state
+    if (preset.initial) {
+        Object.assign(element.style, preset.initial);
+    }
+
+    try {
+        const { animate } = await import("https://cdn.jsdelivr.net/npm/motion@11.13.5/mini/+esm");
+        return animate(element, preset.target, { duration, ease });
+    } catch (err) {
+        console.error("[SharedUI] Motion JS import/animation failed:", err);
+    }
+};
+
