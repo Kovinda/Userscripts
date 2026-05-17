@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.16.0032
+// @version      2026.05.17.0002
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -428,8 +428,8 @@
             padding: 18px 24px !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
         }
-        [data-turn="assistant"] pre,
-        div[data-message-author-role="assistant"].text-message pre {
+        [data-turn="assistant"] pre:not(:has(.cm-editor)):not(.cm-content),
+        div[data-message-author-role="assistant"].text-message pre:not(:has(.cm-editor)):not(.cm-content) {
             background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
             -webkit-backdrop-filter: blur(12px) !important;
             backdrop-filter: blur(12px) !important;
@@ -439,11 +439,31 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
             margin-right: 1rem;
         }
-        [data-turn="assistant"] pre > div,
-        div[data-message-author-role="assistant"].text-message pre > div {
+        [data-turn="assistant"] pre:not(:has(.cm-editor)):not(.cm-content) > div,
+        div[data-message-author-role="assistant"].text-message pre:not(:has(.cm-editor)):not(.cm-content) > div {
             background-color: transparent !important;
             border-radius: 20px !important;
             overflow: hidden !important;
+        }
+        /* New ChatGPT CodeMirror Code Blocks */
+        [data-turn="assistant"] pre:has(.cm-editor) .bg-token-bg-elevated-secondary,
+        div[data-message-author-role="assistant"].text-message pre:has(.cm-editor) .bg-token-bg-elevated-secondary {
+            background-color: var(--tm-glass-strong-bg, rgba(0,0,0, 0.5)) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            backdrop-filter: blur(12px) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        }
+        [data-turn="assistant"] pre:has(.cm-editor) .border-token-border-light,
+        div[data-message-author-role="assistant"].text-message pre:has(.cm-editor) .border-token-border-light {
+            border-color: var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+        }
+        [data-turn="assistant"] .cm-editor,
+        div[data-message-author-role="assistant"].text-message .cm-editor,
+        [data-turn="assistant"] .cm-scroller,
+        div[data-message-author-role="assistant"].text-message .cm-scroller,
+        [data-turn="assistant"] .cm-content,
+        div[data-message-author-role="assistant"].text-message .cm-content {
+            background-color: transparent !important;
         }
         div[role="presentation"] div.group div.flex {
             background-color: rgba(10,10,10, 0) !important;
