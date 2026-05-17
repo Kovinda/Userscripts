@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Danbooru Enhancer & Animated Backgrounds
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0003
+// @version      2026.05.17.0004
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
 // @require      https://cdn.jsdelivr.net/npm/node-vibrant@latest/dist/vibrant.min.js
-// @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/color-utils.js
-// @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/vibrant-loader.js
-// @require      https://cdn.jsdelivr.net/gh/Kovinda/Userscripts@main/common/animations.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/color-utils.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/vibrant-loader.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/animations.js
 // @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
