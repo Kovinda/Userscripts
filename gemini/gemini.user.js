@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0003
+// @version      2026.05.17.0004
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -202,9 +202,14 @@
                 --user-message-text-color: ${textColor1} !important;
             }
 
-            /* ===== UI TRANSPARENCY & GLASS LAYOUT ===== */
-            html, body, chat-app, .mat-app-background, .theme-host, [class*="theme"] {
+            /* ===== UI TRANSPARENCY & STRIP WRAPPER BACKGROUNDS ===== */
+            html, body, chat-app, modular-zero-state, .modular-zero-state-container, .blur-bg, zero-state-block-picker, .zero-state-block-container, .top-section-container, .bottom-section-container, intent-chips-block, intent-card-bar, .card-container, .scroll-container, .mat-app-background, .theme-host, [class*="theme"], intent-card, .initial-input-area, .input-area, rich-textarea, new-input-ui, .rich-textarea-container, .ql-container, .ql-editor, .bottom-container, .input-form, .center-input-container {
+                background: transparent !important;
                 background-color: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border: none !important;
+                box-shadow: none !important;
             }
 
             /* Top Bar / Header */
@@ -224,12 +229,8 @@
                 border-right: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
             }
 
-            /* Input Box & Inner Rich Textarea Composer Transparency */
-            rich-textarea, rich-textarea > div, .input-area-container, .ql-container, .bottom-container, .input-form, .center-input-container {
-                background: transparent !important;
-                background-color: transparent !important;
-            }
-            .initial-input-area, .initial-input-area-container, new-input-ui, [class*="input-area"], .lm-input-redesign-ssr, .simplified-input-area-ssr, rich-textarea {
+            /* Precise Single Glass Layer for the Input Composer Bar */
+            .initial-input-area-container, .chat-input-container, [data-test-id="chat-input-container"] {
                 background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.75)) !important;
                 backdrop-filter: blur(24px) saturate(160%) !important;
                 -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
@@ -345,15 +346,12 @@
             }
 
             /* ===== USER PROMPT & INTENT CHIPS ===== */
-            intent-chips-block button,
             intent-card button,
             button.card-zero-state,
-            .card-zero-state,
             user-prompt-chip,
             .user-prompt-chip,
             .mat-mdc-standard-chip,
             intent-chip button,
-            intent-card,
             [data-test-id="intent-chip"] {
                 background-color: var(--tm-glass-bg, rgba(255, 255, 255, 0.1)) !important;
                 backdrop-filter: blur(16px) saturate(140%) !important;
@@ -364,15 +362,12 @@
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
             }
-            intent-chips-block button:hover,
             intent-card button:hover,
             button.card-zero-state:hover,
-            .card-zero-state:hover,
             user-prompt-chip:hover,
             .user-prompt-chip:hover,
             .mat-mdc-standard-chip:hover,
             intent-chip button:hover,
-            intent-card:hover,
             [data-test-id="intent-chip"]:hover {
                 border-color: ${hex1} !important;
                 background-color: ${selection} !important;
