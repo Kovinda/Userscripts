@@ -416,63 +416,109 @@ window.SharedUI.animationPresets = {
 // =================================================================
 
 window.SharedUI.MOTION_OPTIONS = [
-    { value: "sweepDown", label: "Sweep Down", desc: "Smooth cinematic reveal from top to bottom" },
-    { value: "fadeIn", label: "Fade In", desc: "Subtle alpha fade transition" },
-    { value: "zoomIn", label: "Zoom In", desc: "Smooth scale expansion from center" },
-    { value: "blur", label: "Focus Blur", desc: "Premium camera focus pull effect" },
-    { value: "circleOut", label: "Circle Out", desc: "Expanding circular aperture reveal" },
-    { value: "rhombusReveal", label: "Diamond Reveal", desc: "Center diamond expanding outward" },
-    { value: "glitchReveal", label: "Cyber Glitch", desc: "Futuristic multi-stripe slice reveal" },
-    { value: "starBurst", label: "Star Burst", desc: "Dynamic 10-point starburst reveal" }
+    { value: "cinematicPull", label: "Cinematic Pull", desc: "Ultra-premium focus pull with scale & desaturation" },
+    { value: "cyberSlice", label: "Cyber Slice", desc: "High-tech multi-angle geometric reveal" },
+    { value: "liquidMorph", label: "Liquid Morph", desc: "Organic fluid gravity drip expansion" },
+    { value: "irisWipe", label: "Iris Wipe", desc: "Cinematic camera aperture rotating expansion" },
+    { value: "neonPulse", label: "Neon Pulse", desc: "High-energy flicker and zoom reveal" },
+    { value: "hyperSpace", label: "Hyper Space", desc: "Vertical stretch compression from infinity" },
+    { value: "glassShatter", label: "Glass Shatter", desc: "Aggressive shard expansion from center" },
+    { value: "glitchMatrix", label: "Glitch Matrix", desc: "Corrupted data stream horizontal reveal" }
 ];
 
 window.SharedUI.motionPresets = {
-    sweepDown: {
-        initial: { clipPath: "inset(0px 0px 100% 0px)" },
-        target: { clipPath: ["inset(0px 0px 100% 0px)", "inset(0px 0px 0px 0px)"] }
-    },
-    fadeIn: {
-        initial: { opacity: "0" },
-        target: { opacity: [0, 1] }
-    },
-    zoomIn: {
-        initial: { opacity: "0", transform: "scale(0.6)" },
-        target: { opacity: [0, 1], scale: [0.6, 1] }
-    },
-    blur: {
-        initial: { opacity: "0", filter: "blur(30px)", transform: "scale(1.05)" },
-        target: { opacity: [0, 1], filter: ["blur(30px)", "blur(0px)"], scale: [1.05, 1] }
-    },
-    circleOut: {
-        initial: { clipPath: "circle(0% at 50% 50%)", opacity: "0" },
-        target: { clipPath: ["circle(0% at 50% 50%)", "circle(150% at 50% 50%)"], opacity: [0, 1] }
-    },
-    rhombusReveal: {
-        initial: { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", opacity: "0" },
-        target: { clipPath: ["polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", "polygon(50% -150%, 250% 50%, 50% 250%, -150% 50%)"], opacity: [0, 1] }
-    },
-    glitchReveal: {
-        initial: { clipPath: "polygon(0 0, 0 0, 0 33%, 0 33%, 100% 33%, 100% 33%, 100% 67%, 100% 67%, 0 67%, 0 67%, 0 100%, 0 100%)", opacity: "0" },
+    cinematicPull: {
+        initial: { opacity: "0", filter: "blur(40px) grayscale(100%) brightness(200%)", transform: "scale(1.15)" },
         target: { 
-            clipPath: [
-                "polygon(0 0, 0 0, 0 33%, 0 33%, 100% 33%, 100% 33%, 100% 67%, 100% 67%, 0 67%, 0 67%, 0 100%, 0 100%)",
-                "polygon(0 0, 35% 0, 35% 33%, 0 33%, 100% 33%, 65% 33%, 65% 67%, 100% 67%, 0 67%, 40% 67%, 40% 100%, 0 100%)",
-                "polygon(0 0, 80% 0, 80% 33%, 0 33%, 100% 33%, 20% 33%, 20% 67%, 100% 67%, 0 67%, 85% 67%, 85% 100%, 0 100%)",
-                "polygon(0 0, 100% 0, 100% 33%, 0 33%, 100% 33%, 0 33%, 0 67%, 100% 67%, 0 67%, 100% 67%, 100% 100%, 0 100%)"
-            ], 
-            opacity: [0, 0.6, 0.9, 1] 
+            opacity: [0, 1], 
+            filter: ["blur(40px) grayscale(100%) brightness(200%)", "blur(0px) grayscale(0%) brightness(100%)"], 
+            scale: [1.15, 1] 
         }
     },
-    starBurst: {
-        initial: { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%)", opacity: "0", transform: "rotate(-90deg) scale(0.5)" },
+    cyberSlice: {
+        initial: { clipPath: "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)", opacity: "0", filter: "contrast(200%) hue-rotate(90deg)" },
         target: { 
             clipPath: [
-                "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 50% 50%)",
-                "polygon(50% -350%, 167% -111%, 430% -73%, 240% 111%, 284% 373%, 50% 250%, -184% 373%, -140% 111%, -330% -73%, -67% -111%)"
+                "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)",
+                "polygon(0% 0%, 50% 20%, 30% 100%, 0% 100%)",
+                "polygon(0% 0%, 80% 10%, 60% 100%, 0% 100%)",
+                "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
             ], 
-            opacity: [0, 1], 
-            rotate: [-90, 0], 
-            scale: [0.5, 1] 
+            opacity: [0, 0.8, 1, 1],
+            filter: ["contrast(200%) hue-rotate(90deg)", "contrast(100%) hue-rotate(0deg)"]
+        }
+    },
+    liquidMorph: {
+        initial: { clipPath: "ellipse(5% 5% at 50% -10%)", opacity: "0", filter: "blur(20px)" },
+        target: { 
+            clipPath: [
+                "ellipse(5% 5% at 50% -10%)",
+                "ellipse(30% 50% at 50% 40%)",
+                "ellipse(60% 80% at 50% 60%)",
+                "ellipse(150% 150% at 50% 50%)"
+            ],
+            opacity: [0, 1],
+            filter: ["blur(20px)", "blur(0px)"]
+        }
+    },
+    irisWipe: {
+        initial: { clipPath: "polygon(50% 40%, 60% 50%, 50% 60%, 40% 50%)", opacity: "0", transform: "rotate(-180deg) scale(0.2)" },
+        target: { 
+            clipPath: [
+                "polygon(50% 40%, 60% 50%, 50% 60%, 40% 50%)",
+                "polygon(50% 20%, 80% 50%, 50% 80%, 20% 50%)",
+                "polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%)",
+                "polygon(50% -150%, 250% 50%, 50% 250%, -150% 50%)"
+            ],
+            opacity: [0, 1],
+            rotate: [-180, 0],
+            scale: [0.2, 1]
+        }
+    },
+    neonPulse: {
+        initial: { opacity: "0", filter: "brightness(300%) contrast(300%) blur(30px)", transform: "scale(1.3)" },
+        target: { 
+            opacity: [0, 0.4, 0.1, 0.8, 0.3, 1], 
+            filter: ["brightness(300%) contrast(300%) blur(30px)", "brightness(200%) contrast(200%) blur(10px)", "brightness(100%) contrast(100%) blur(0px)"], 
+            scale: [1.3, 1] 
+        }
+    },
+    hyperSpace: {
+        initial: { clipPath: "inset(0% 49.5% 0% 49.5%)", opacity: "0", transform: "scaleY(3) scaleX(0.2)", filter: "blur(20px)" },
+        target: { 
+            clipPath: ["inset(0% 49.5% 0% 49.5%)", "inset(0% 0% 0% 0%)"],
+            opacity: [0, 1],
+            scaleY: [3, 1],
+            scaleX: [0.2, 1],
+            filter: ["blur(20px)", "blur(0px)"]
+        }
+    },
+    glassShatter: {
+        initial: { clipPath: "polygon(45% 45%, 55% 45%, 55% 55%, 45% 55%)", opacity: "0", transform: "scale(0.1) rotate(45deg)", filter: "brightness(150%) blur(10px)" },
+        target: { 
+            clipPath: [
+                "polygon(45% 45%, 55% 45%, 55% 55%, 45% 55%)",
+                "polygon(30% 20%, 80% 10%, 70% 80%, 20% 90%)",
+                "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+            ],
+            opacity: [0, 1],
+            scale: [0.1, 1.2, 1],
+            rotate: [45, -10, 0],
+            filter: ["brightness(150%) blur(10px)", "brightness(100%) blur(0px)"]
+        }
+    },
+    glitchMatrix: {
+        initial: { clipPath: "polygon(0% 45%, 100% 45%, 100% 55%, 0% 55%)", opacity: "0", transform: "translateX(-20px)", filter: "hue-rotate(-90deg) contrast(150%)" },
+        target: { 
+            clipPath: [
+                "polygon(0% 45%, 100% 45%, 100% 55%, 0% 55%)",
+                "polygon(0% 20%, 100% 20%, 100% 80%, 0% 80%)",
+                "polygon(0% 0%, 100% 10%, 100% 100%, 0% 90%)",
+                "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+            ],
+            opacity: [0, 0.8, 0.4, 1],
+            x: [-20, 10, -5, 0],
+            filter: ["hue-rotate(-90deg) contrast(150%)", "hue-rotate(90deg) contrast(100%)", "hue-rotate(0deg) contrast(100%)"]
         }
     }
 };
