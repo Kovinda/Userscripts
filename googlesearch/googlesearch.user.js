@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0010
+// @version      2026.05.20.0011
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -716,6 +716,45 @@
             border: none !important;
             padding: 0 !important;
             margin-bottom: 0 !important;
+        }
+
+        /* Compact glass backdrop for the left header block only */
+        html body .kp-wholepage-osrp .HdbW6 {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 16px !important;
+            border-radius: 18px !important;
+            background: var(--tm-glass-strong-bg, rgba(18, 18, 18, 0.6)) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.16)) !important;
+            backdrop-filter: blur(18px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
+            box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
+        }
+
+        html body .kp-wholepage-osrp .HdbW6 .hHq9Z {
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* No chip fills in the OSRP tabs area */
+        html body .kp-wholepage-osrp a.NQyKp {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-color: rgba(255, 255, 255, 0.18) !important;
+        }
+
+        html body .kp-wholepage-osrp a.NQyKp[aria-current="page"],
+        html body .kp-wholepage-osrp a.NQyKp.Maj6Tc {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-color: rgba(var(--tm-accent-rgb, 255, 255, 255), 0.5) !important;
+        }
+
+        html body .kp-wholepage-osrp a.NQyKp:hover {
+            background: transparent !important;
+            box-shadow: none !important;
         }
 
         /* Strip backgrounds and blurs on ALL descendant layout elements inside cards to allow our custom glass to show through */
