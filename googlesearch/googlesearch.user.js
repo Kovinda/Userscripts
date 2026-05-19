@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0003
+// @version      2026.05.20.0004
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -463,8 +463,8 @@
         html body #jOAHU > .A6K0A,
         html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)):has(a) {
             background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.6)) !important;
-            backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
+            backdrop-filter: blur(24px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
             border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
             border-radius: 16px !important;
             padding: 20px !important;
