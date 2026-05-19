@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0014
+// @version      2026.05.19.0015
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -303,10 +303,28 @@
                 box-shadow: 0 0 12px ${p.rgba(p.colors[0], 0.3)} !important;
             }
 
-            /* Active Search Tab line selector */
+            /* Active Search Tab pill selector & dynamic theme color matching */
             .hdtb-msb .hdtb-mitem.hdtb-msel, .q8sa8b, .crJ18e .KTZ27c {
                 border-bottom: 3px solid ${hex1} !important;
                 color: ${hex1} !important;
+            }
+            
+            html body [selected=""] .mXwfNd,
+            html body [selected=""] .R1QWuf,
+            html body [aria-current="page"] .mXwfNd,
+            html body [aria-current="page"] .R1QWuf,
+            html body [selected=""],
+            html body [aria-current="page"] {
+                background-color: ${hex1} !important;
+                color: ${textColor1} !important;
+                box-shadow: 0 4px 14px 0 color-mix(in srgb, ${hex1} 30%, rgba(0, 0, 0, 0.3)) !important;
+            }
+            
+            html body [selected=""] span,
+            html body [aria-current="page"] span,
+            html body [selected=""] .R1QWuf,
+            html body [aria-current="page"] .R1QWuf {
+                color: ${textColor1} !important;
             }
 
             /* Dynamic colors for page results text contrast */
@@ -485,6 +503,108 @@
             box-shadow: none !important;
             border: none !important;
         }
+
+        /* Strip background on wrapper divs of the top category navigation bar */
+        html body .Fgyi2e,
+        html body .rZj61,
+        html body .YNk70c,
+        html body .GG4mbd,
+        html body .P3mIxe,
+        html body .Gcxb4e,
+        html body .HTOhZ,
+        html body .rAdPSe,
+        html body .EDblX,
+        html body .JpOecb,
+        html body .h5JSWd,
+        html body .rQTE8b,
+        html body .beZ0tf {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Float search category navigation bar as a gorgeous glass pill container */
+        html body .YNk70c.iFBYke {
+            background-color: var(--tm-glass-header-bg, rgba(15, 15, 15, 0.45)) !important;
+            backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
+            -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+            border-radius: 30px !important;
+            padding: 6px 18px !important;
+            margin: 15px 0 20px 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            box-shadow: var(--tm-glass-shadow, 0 8px 32px 0 rgba(0, 0, 0, 0.25)) !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Category navigation list flex layouts reset */
+        html body .beZ0tf {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Navigation items styling */
+        html body .C6AK7c,
+        html body .XVMlrc,
+        html body .mXwfNd,
+        html body .R1QWuf,
+        html body .olrp5b {
+            color: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            border-bottom: none !important;
+            border-radius: 20px !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Interactive list items */
+        html body [role="listitem"],
+        html body [role="listitem"] a,
+        html body .C6AK7c {
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        /* Flex wrap and layout inner text nodes */
+        html body .mXwfNd {
+            padding: 6px 14px !important;
+            border-radius: 20px !important;
+        }
+
+        /* Interactive hover tabs */
+        html body [role="listitem"] a:hover .mXwfNd,
+        html body .C6AK7c:hover .mXwfNd,
+        html body .XVMlrc:hover .mXwfNd,
+        html body .mOKdDc:hover .mXwfNd {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: var(--tm-text-primary, #ffffff) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        /* Strip default category bottom line indicators */
+        html body .mXwfNd::after,
+        html body .C6AK7c::after,
+        html body [role="listitem"]::after {
+            display: none !important;
+            content: none !important;
+            border-bottom: none !important;
+        }
+
 
         /* Strip backgrounds on dynamic Google OSRP wholepage panel structures */
         html body .kp-wholepage-osrp > div,
