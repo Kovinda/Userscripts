@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0012
+// @version      2026.05.19.0013
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -440,7 +440,8 @@
         html body .vtSz8d,
         html body div.ZHugbd,
         html body div.UivI7b,
-        html body .kp-wholepage-osrp,
+        html body .kp-wholepage-osrp:not(#rhs *),
+        html body #jOAHU > .A6K0A,
         html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)):has(a) {
             background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
@@ -455,7 +456,12 @@
 
         /* Strip backgrounds on dynamic Google OSRP wholepage panel structures */
         html body .kp-wholepage-osrp > div,
-        html body .kp-wholepage-osrp .xfX4Ac {
+        html body .kp-wholepage-osrp .xfX4Ac,
+        html body #rhs .kp-wholepage-osrp,
+        html body #rhs .kp-wholepage-osrp > div,
+        html body #rhs .kp-wholepage-osrp .xfX4Ac,
+        html body #rhs .tsRboc,
+        html body #rhs .pCnXsf {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
@@ -465,6 +471,8 @@
         }
 
         /* Strip backgrounds and blurs on ALL descendant layout elements inside cards to allow our custom glass to show through */
+        #jOAHU > .A6K0A div,
+        #jOAHU > .A6K0A span,
         .g .tF23xf, .g .hlcw0c, .g .ifM9O, .g .eqAnXb, .g .cUnQKe, .g .Uo81ke, .g .WwMm6e, .g .VjDLd, .g .xpd, .g .g-card, .g .card-section,
         .kp-blk .tF23xf, .kp-blk .hlcw0c, .kp-blk .ifM9O, .kp-blk .eqAnXb, .kp-blk .cUnQKe, .kp-blk .Uo81ke, .kp-blk .WwMm6e, .kp-blk .VjDLd, .kp-blk .xpd, .kp-blk .g-card, .kp-blk .card-section, .kp-blk .tsRboc,
         .vtSz8d .tF23xf, .vtSz8d .hlcw0c, .vtSz8d .ifM9O, .vtSz8d .eqAnXb, .vtSz8d .cUnQKe, .vtSz8d .Uo81ke, .vtSz8d .WwMm6e, .vtSz8d .VjDLd, .vtSz8d .xpd, .vtSz8d .g-card, .vtSz8d .card-section,
