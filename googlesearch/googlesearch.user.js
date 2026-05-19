@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0002
+// @version      2026.05.20.0003
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -462,10 +462,10 @@
         html body .kp-wholepage-osrp:not(#rhs *),
         html body #jOAHU > .A6K0A,
         html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)):has(a) {
-            background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
+            background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.6)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            border: 1px solid var(--tm-glass-card-border, var(--tm-glass-border, rgba(255, 255, 255, 0.08))) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
             border-radius: 16px !important;
             padding: 20px !important;
             margin-bottom: 20px !important;
@@ -478,8 +478,8 @@
         html body .VNzqVe .D7ethf,
         html body .VNzqVe .ZHugbd,
         html body .VNzqVe .UivI7b {
-            background-color: color-mix(in srgb, var(--tm-accent-1, rgba(255, 255, 255, 0.15)) 15%, rgba(15, 15, 15, 0.5)) !important;
-            border: 1px solid color-mix(in srgb, var(--tm-accent-1, rgba(255, 255, 255, 0.25)) 35%, rgba(255, 255, 255, 0.1)) !important;
+            background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.6)) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.15)) !important;
             box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25) !important;
             transition: all 0.3s ease !important;
         }
@@ -488,9 +488,9 @@
         html body .VNzqVe .D7ethf:hover,
         html body .VNzqVe .ZHugbd:hover,
         html body .VNzqVe .UivI7b:hover {
-            background-color: color-mix(in srgb, var(--tm-accent-1, rgba(255, 255, 255, 0.25)) 22%, rgba(15, 15, 15, 0.5)) !important;
-            border-color: color-mix(in srgb, var(--tm-accent-1, rgba(255, 255, 255, 0.35)) 55%, rgba(255, 255, 255, 0.2)) !important;
-            box-shadow: 0 8px 32px 0 color-mix(in srgb, var(--tm-accent-1, rgba(255, 255, 255, 0.15)) 15%, rgba(0, 0, 0, 0.4)) !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
             transform: translateY(-2px) !important;
         }
 
