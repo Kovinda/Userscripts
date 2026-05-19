@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0008
+// @version      2026.05.19.0009
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -463,7 +463,11 @@
         }
 
         /* Strip backgrounds and blurs on ALL descendant layout elements inside cards to allow our custom glass to show through */
-        .tF23xf, .hlcw0c, .ifM9O, .eqAnXb, .cUnQKe, .Uo81ke, .WwMm6e, .VjDLd, .xpd, .g-card, .card-section, .tsRboc {
+        .g .tF23xf, .g .hlcw0c, .g .ifM9O, .g .eqAnXb, .g .cUnQKe, .g .Uo81ke, .g .WwMm6e, .g .VjDLd, .g .xpd, .g .g-card, .g .card-section,
+        .kp-blk .tF23xf, .kp-blk .hlcw0c, .kp-blk .ifM9O, .kp-blk .eqAnXb, .kp-blk .cUnQKe, .kp-blk .Uo81ke, .kp-blk .WwMm6e, .kp-blk .VjDLd, .kp-blk .xpd, .kp-blk .g-card, .kp-blk .card-section, .kp-blk .tsRboc,
+        .vtSz8d .tF23xf, .vtSz8d .hlcw0c, .vtSz8d .ifM9O, .vtSz8d .eqAnXb, .vtSz8d .cUnQKe, .vtSz8d .Uo81ke, .vtSz8d .WwMm6e, .vtSz8d .VjDLd, .vtSz8d .xpd, .vtSz8d .g-card, .vtSz8d .card-section,
+        .MjjYud > div .tF23xf, .MjjYud > div .hlcw0c, .MjjYud > div .ifM9O, .MjjYud > div .eqAnXb, .MjjYud > div .cUnQKe, .MjjYud > div .Uo81ke, .MjjYud > div .WwMm6e, .MjjYud > div .VjDLd, .MjjYud > div .xpd, .MjjYud > div .g-card, .MjjYud > div .card-section,
+        .ULSxyf .tF23xf, .ULSxyf .hlcw0c, .ULSxyf .ifM9O, .ULSxyf .eqAnXb, .ULSxyf .cUnQKe, .ULSxyf .Uo81ke, .ULSxyf .WwMm6e, .ULSxyf .VjDLd, .ULSxyf .xpd, .ULSxyf .g-card, .ULSxyf .card-section {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
