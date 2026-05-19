@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0009
+// @version      2026.05.20.0010
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -654,6 +654,10 @@
 
         /* High-end Navigation chips styling for knowledge panel tabs */
         html body a.NQyKp {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 8px 16px !important;
             background-color: rgba(10, 10, 10, 0.55) !important; /* Deep dark frosted glass for high legibility */
             backdrop-filter: blur(20px) saturate(140%) !important;
             -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
@@ -661,6 +665,13 @@
             box-shadow: var(--tm-glass-shadow, 0 4px 15px rgba(0, 0, 0, 0.2)) !important;
             cursor: pointer !important;
             transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+
+        /* Remove currentColor slab on knowledge panel chip wrappers */
+        html body a.NQyKp .REySof {
+            background: transparent !important;
+            background-color: transparent !important;
+            padding: 0 !important;
         }
 
         /* Ensure text and inner elements of knowledge panel chips are styled beautifully and legibly */
