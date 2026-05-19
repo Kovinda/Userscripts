@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0004
+// @version      2026.05.20.0005
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -309,22 +309,22 @@
                 color: ${hex1} !important;
             }
             
+            /* High-end glassmorphic active chip design matching premium card style */
+            html body .mXwfNd[selected=""],
+            html body .mXwfNd[aria-current="page"],
             html body [selected=""] .mXwfNd,
-            html body [selected=""] .R1QWuf,
-            html body [aria-current="page"] .mXwfNd,
-            html body [aria-current="page"] .R1QWuf,
-            html body [selected=""],
-            html body [aria-current="page"] {
-                background-color: ${hex1} !important;
+            html body [aria-current="page"] .mXwfNd {
+                background: linear-gradient(135deg, ${hex1} 0%, color-mix(in srgb, ${hex1} 75%, ${hex2}) 100%) !important;
                 color: ${textColor1} !important;
-                box-shadow: 0 4px 14px 0 color-mix(in srgb, ${hex1} 30%, rgba(0, 0, 0, 0.3)) !important;
-                border-color: transparent !important;
+                border-color: rgba(255, 255, 255, 0.15) !important;
+                box-shadow: 0 6px 20px 0 color-mix(in srgb, ${hex1} 40%, rgba(0, 0, 0, 0.4)), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+                transform: translateY(-1px) !important;
             }
             
-            html body [selected=""] span,
-            html body [aria-current="page"] span,
-            html body [selected=""] .R1QWuf,
-            html body [aria-current="page"] .R1QWuf {
+            html body .mXwfNd[selected=""] *,
+            html body .mXwfNd[aria-current="page"] *,
+            html body [selected=""] .mXwfNd *,
+            html body [aria-current="page"] .mXwfNd * {
                 color: ${textColor1} !important;
             }
 
@@ -505,7 +505,7 @@
             border: none !important;
         }
 
-        /* Strip background on wrapper divs of the top category navigation bar */
+        /* Strip background and reset styles on all wrapper divs of the top category navigation bar to avoid double borders/styling */
         html body .Fgyi2e,
         html body .rZj61,
         html body .YNk70c,
@@ -518,16 +518,26 @@
         html body .JpOecb,
         html body .h5JSWd,
         html body .rQTE8b,
-        html body .beZ0tf {
+        html body .beZ0tf,
+        html body .olrp5b,
+        html body .C6AK7c,
+        html body .XVMlrc,
+        html body [role="listitem"],
+        html body [role="listitem"] > div,
+        html body [role="listitem"] a,
+        html body .yeKjxb,
+        html body .mOKdDc,
+        html body .mTpL7c {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
             border: none !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            text-decoration: none !important;
         }
-
-
 
         /* Category navigation list flex layouts reset */
         html body .beZ0tf {
@@ -535,79 +545,83 @@
             flex-direction: row !important;
             align-items: center !important;
             gap: 8px !important;
-            padding: 0 !important;
+            padding: 4px 0 !important; /* Elegant vertical padding */
             margin: 0 !important;
         }
 
-        /* Navigation items styling */
-        html body .C6AK7c,
-        html body .XVMlrc,
-        html body .mXwfNd,
-        html body .R1QWuf,
-        html body .olrp5b {
-            color: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            text-decoration: none !important;
-            border-bottom: none !important;
-            border-radius: 20px !important;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        /* Interactive list items */
-        html body [role="listitem"],
-        html body [role="listitem"] a,
-        html body .C6AK7c {
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-        }
-
-        /* Flex wrap and layout inner text nodes */
+        /* High-end Navigation chips container base styling */
         html body .mXwfNd {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            height: 32px !important;
+            height: 38px !important; /* Elevated height for spacious premium feel */
             box-sizing: border-box !important;
-            padding: 0 16px !important;
-            border-radius: 16px !important;
-            background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
-            backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            border: 1px solid var(--tm-glass-card-border, var(--tm-glass-border, rgba(255, 255, 255, 0.08))) !important;
-            box-shadow: var(--tm-glass-shadow, 0 4px 12px rgba(0, 0, 0, 0.15)) !important;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            padding: 0 18px !important; /* Perfect luxury horizontal spacing */
+            border-radius: 100px !important; /* Ultra-smooth modern pill curvature matching premium cards */
+            background-color: var(--tm-glass-card-bg, rgba(20, 20, 20, 0.4)) !important;
+            backdrop-filter: var(--tm-glass-filter, blur(24px) saturate(140%)) !important;
+            -webkit-backdrop-filter: var(--tm-glass-filter, blur(24px) saturate(140%)) !important;
+            border: 1px solid var(--tm-glass-card-border, rgba(255, 255, 255, 0.08)) !important;
+            box-shadow: var(--tm-glass-shadow, 0 4px 15px rgba(0, 0, 0, 0.2)) !important;
+            color: var(--tm-text-secondary, rgba(255, 255, 255, 0.75)) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
         }
 
-        /* Ensure inner content of chips is perfectly centered vertically and horizontally */
-        html body .mXwfNd .mVH5Fc {
+        /* Ensure text and inner elements are styled beautifully and legibly */
+        html body .mXwfNd .R1QWuf,
+        html body .mXwfNd .mVH5Fc,
+        html body .mXwfNd span {
+            color: inherit !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 6px !important;
-            height: auto !important;
-            margin: 0 !important;
+            background: transparent !important;
+            border: none !important;
             padding: 0 !important;
+            margin: 0 !important;
         }
 
-        /* Interactive hover tabs */
+        /* Interactive premium hover transitions - adds smooth lift and gorgeous matching glow */
+        html body .mXwfNd:hover,
         html body [role="listitem"] a:hover .mXwfNd,
+        html body [role="listitem"] div:hover > .mXwfNd,
         html body .C6AK7c:hover .mXwfNd,
         html body .XVMlrc:hover .mXwfNd,
-        html body .mOKdDc:hover .mXwfNd {
-            background-color: rgba(255, 255, 255, 0.15) !important;
-            color: var(--tm-text-primary, #ffffff) !important;
-            transform: translateY(-1px) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
+        html body .mOKdDc:hover .mXwfNd,
+        html body .mTpL7c:hover .mXwfNd {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            color: var(--tm-accent-1, #ffffff) !important;
+            transform: translateY(-2px) !important;
+            border-color: rgba(var(--tm-accent-rgb, 255, 255, 255), 0.35) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 10px rgba(var(--tm-accent-rgb, 255, 255, 255), 0.25) !important;
         }
 
-        /* Strip default category bottom line indicators */
+        /* Default fallback Selected/Active Navigation Chip style when wallpaper accent is disabled */
+        html body .mXwfNd[selected=""],
+        html body .mXwfNd[aria-current="page"],
+        html body [selected=""] .mXwfNd,
+        html body [aria-current="page"] .mXwfNd {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        html body .mXwfNd[selected=""] *,
+        html body .mXwfNd[aria-current="page"] * {
+            color: #ffffff !important;
+        }
+
+        /* Clean up any residual category styling from Google default theme */
         html body .mXwfNd::after,
         html body .C6AK7c::after,
         html body [role="listitem"]::after {
