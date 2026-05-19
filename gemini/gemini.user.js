@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0018
+// @version      2026.05.19.0001
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -9,6 +9,7 @@
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/color-utils.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/vibrant-loader.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/animations.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/wallpaper.js
 // @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
@@ -673,7 +674,7 @@
                 if (response.status === 200) {
                     const reader = new FileReader();
                     reader.onloadend = function() {
-                        callback(reader.result);
+                        callback(reader.result, response.responseHeaders);
                     };
                     reader.readAsDataURL(response.response);
                 } else {
@@ -686,6 +687,39 @@
                 ensurePrehideReleased();
             }
         });
+    }
+
+    function transitionToNewWallpaper(dataUrl) {
+        const bgContainer = document.getElementById('gemini-custom-bg');
+        if (!bgContainer) return;
+
+        const oldBg = bgContainer.querySelector('#gemini-bg-image');
+
+        // Create new background element
+        const newBg = document.createElement('div');
+        newBg.id = 'gemini-bg-image';
+        newBg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; background-image: linear-gradient(${OVERLAY_COLOR}, ${OVERLAY_COLOR}), url('${dataUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat; will-change: clip-path, transform, opacity, filter; backface-visibility: hidden; opacity: 0;`;
+
+        bgContainer.appendChild(newBg);
+
+        const durationSeconds = Number.parseFloat(settings.duration || DEFAULT_SETTINGS.duration) || 1.5;
+        if (SharedUI.animateWithMotion) {
+            newBg.style.opacity = '1';
+            SharedUI.animateWithMotion(newBg, settings.animation, {
+                duration: durationSeconds,
+                ease: settings.easing || DEFAULT_SETTINGS.easing
+            });
+        } else {
+            newBg.style.opacity = '1';
+        }
+
+        cachedImageDataUrl = dataUrl;
+        extractPaletteFromDataUrl(dataUrl);
+
+        const durationMs = durationSeconds * 1000;
+        setTimeout(() => {
+            if (oldBg) oldBg.remove();
+        }, durationMs + 100);
     }
 
     function injectOrUpdateStyle(styleId, css) {
@@ -1207,7 +1241,7 @@
         runtimeObserver.observe(document.body, { childList: true, subtree: true });
     }
 
-    function applyBackground(imageDataUrl) {
+    function applyBackground(imageDataUrl, responseHeaders) {
         if (!imageDataUrl) return;
 
         backgroundApplied = true;
@@ -1242,6 +1276,11 @@
         tryApplyQuoteToPrompt();
         ensureRuntimeObserver();
         extractPaletteFromDataUrl(imageDataUrl);
+
+        if (responseHeaders && SharedUI.Wallpaper) {
+            SharedUI.Wallpaper.setInitialFingerprint(responseHeaders);
+            SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 60000);
+        }
 
         console.log(`[Gemini Styles] Applied animation template: ${settings.animation}`);
     }

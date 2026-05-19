@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0009
+// @version      2026.05.19.0001
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -12,6 +12,7 @@
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/color-utils.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/vibrant-loader.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/animations.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/wallpaper.js
 // @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
@@ -150,6 +151,37 @@
 
     const animationPresets = SharedUI.motionPresets || SharedUI.animationPresets;
 
+    function transitionToNewWallpaper(dataUrl) {
+        const bgContainer = document.getElementById('chatgpt-custom-bg');
+        if (!bgContainer) return;
+
+        const oldBg = bgContainer.querySelector('#chatgpt-bg-image');
+        
+        // Create new background element
+        const newBg = document.createElement('div');
+        newBg.id = 'chatgpt-bg-image';
+        newBg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; background-image: url('${dataUrl}'); background-size: cover; background-position: center; filter: brightness(50%); will-change: clip-path, transform, opacity, filter; opacity: 0;`;
+        
+        bgContainer.appendChild(newBg);
+        
+        if (SharedUI.animateWithMotion) {
+            newBg.style.opacity = '1';
+            SharedUI.animateWithMotion(newBg, settings.animation, {
+                duration: Number.parseFloat(settings.duration) || 1.5,
+                ease: settings.easing
+            });
+        } else {
+            newBg.style.opacity = '1';
+        }
+        
+        extractPaletteFromDataUrl(dataUrl);
+
+        const durationMs = (Number.parseFloat(settings.duration) || 1.5) * 1000;
+        setTimeout(() => {
+            if (oldBg) oldBg.remove();
+        }, durationMs + 100);
+    }
+
     const imageUrl = `http://127.0.0.1:8190/ActiveBackground.jpg?rand=${Math.random()}`;
 
     GM_xmlhttpRequest({
@@ -157,6 +189,9 @@
         url: imageUrl,
         responseType: 'blob',
         onload: function(response) {
+            if (SharedUI.Wallpaper) {
+                SharedUI.Wallpaper.setInitialFingerprint(response.responseHeaders);
+            }
             const reader = new FileReader();
             reader.onloadend = function() {
                 const dataUrl = reader.result;
@@ -176,6 +211,10 @@
                 }
 
                 extractPaletteFromDataUrl(dataUrl);
+                
+                if (SharedUI.Wallpaper) {
+                    SharedUI.Wallpaper.startPoller('http://127.0.0.1:8190/ActiveBackground.jpg', transitionToNewWallpaper, 60000);
+                }
             };
             reader.readAsDataURL(response.response);
         },

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Enhancer & Animated Backgrounds
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.17.0004
+// @version      2026.05.19.0001
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -9,6 +9,7 @@
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/color-utils.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/vibrant-loader.js
 // @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/animations.js
+// @require      https://raw.githubusercontent.com/Kovinda/Userscripts/main/common/wallpaper.js
 // @require      https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
@@ -325,7 +326,7 @@
             onload: function(response) {
                 if (response.status === 200) {
                     const reader = new FileReader();
-                    reader.onloadend = () => callback(reader.result);
+                    reader.onloadend = () => callback(reader.result, response.responseHeaders);
                     reader.readAsDataURL(response.response);
                 } else {
                     console.log('[Danbooru Enhancer] Wallpaper fetch failed (Status non-200)');
@@ -335,6 +336,37 @@
                 console.log('[Danbooru Enhancer] Wallpaper request failed (Network error/CORS)');
             }
         });
+    };
+
+    const transitionToNewWallpaper = (dataUrl) => {
+        const bgContainer = document.getElementById('danbooru-custom-bg');
+        if (!bgContainer) return;
+
+        const oldBg = bgContainer.querySelector('#danbooru-bg-image');
+
+        // Create new background element
+        const newBg = document.createElement('div');
+        newBg.id = 'danbooru-bg-image';
+        newBg.style.cssText = `position: absolute; inset: 0; width: 100%; height: 100%; background-image: linear-gradient(${OVERLAY_COLOR}, ${OVERLAY_COLOR}), url('${dataUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat; will-change: clip-path, transform, opacity, filter; opacity: 0;`;
+
+        bgContainer.appendChild(newBg);
+
+        if (SharedUI.animateWithMotion) {
+            newBg.style.opacity = '1';
+            SharedUI.animateWithMotion(newBg, bgAnimation, {
+                duration: Number.parseFloat(bgDuration) || 1.5,
+                ease: bgEasing
+            });
+        } else {
+            newBg.style.opacity = '1';
+        }
+
+        extractPaletteFromDataUrl(dataUrl);
+
+        const durationMs = (Number.parseFloat(bgDuration) || 1.5) * 1000;
+        setTimeout(() => {
+            if (oldBg) oldBg.remove();
+        }, durationMs + 100);
     };
 
     let accentStyleElement = null;
@@ -632,7 +664,11 @@
         injectUI();
         setTimeout(updateMenuGlassTone, 0);
         // Fetch and apply animated wallpaper
-        fetchImageAsBase64(BACKGROUND_IMAGE_URL, (dataUrl) => {
+        fetchImageAsBase64(BACKGROUND_IMAGE_URL, (dataUrl, responseHeaders) => {
+            if (SharedUI.Wallpaper) {
+                SharedUI.Wallpaper.setInitialFingerprint(responseHeaders);
+            }
+
             const style = document.createElement('style');
             style.id = 'danbooru-bg-style';
             style.textContent = buildBackgroundCss(dataUrl);
@@ -653,6 +689,10 @@
             }
 
             extractPaletteFromDataUrl(dataUrl);
+
+            if (SharedUI.Wallpaper) {
+                SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 60000);
+            }
         });
     };
 
