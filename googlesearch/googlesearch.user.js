@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0002
+// @version      2026.05.19.0003
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -375,8 +375,14 @@
         }
 
         /* Set premium Google Search cards transparent with customizable glass settings */
-        .g, .kp-blk, .vk_c, .WwMm6e, .MjjYbeb, .VjDLd, .ULSxyf, .cUnQKe, .Uo81ke, 
-        .card-section, .g-card, .xpd, .tF23xf, .hlcw0c, .eqAnXb, .ifM9O {
+        /* Targets only outermost container blocks for left hand and right hand sides */
+        .g, 
+        .kp-wholepage-osrp, 
+        .kp-blk:not(.kp-wholepage-osrp .kp-blk),
+        .vk_c, 
+        .vtSz8d,
+        .MjjYud > div,
+        .ULSxyf {
             background-color: var(--tm-glass-bg, rgba(15, 15, 15, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
@@ -388,10 +394,18 @@
             transition: all 0.3s ease !important;
         }
 
-        /* Nested content background fixes */
-        .g > div, .kp-blk > div, .VjDLd > div, .xpd > div {
+        /* Strip backgrounds and blurs on known nested structural containers to prevent double stacked backgrounds */
+        .g .tF23xf, .g .hlcw0c, .g .ifM9O, .g .eqAnXb, .g .cUnQKe, .g .Uo81ke, .g .WwMm6e, .g .VjDLd, .g .xpd, .g .g-card, .g .card-section,
+        .MjjYud > div .tF23xf, .MjjYud > div .hlcw0c, .MjjYud > div .ifM9O, .MjjYud > div .eqAnXb, .MjjYud > div .cUnQKe, .MjjYud > div .Uo81ke, .MjjYud > div .WwMm6e, .MjjYud > div .VjDLd, .MjjYud > div .xpd, .MjjYud > div .g-card, .MjjYud > div .card-section,
+        .vtSz8d .tF23xf, .vtSz8d .hlcw0c, .vtSz8d .ifM9O, .vtSz8d .eqAnXb, .vtSz8d .cUnQKe, .vtSz8d .Uo81ke, .vtSz8d .WwMm6e, .vtSz8d .VjDLd, .vtSz8d .xpd, .vtSz8d .g-card, .vtSz8d .card-section,
+        .kp-wholepage-osrp .kp-blk, .kp-wholepage-osrp .card-section, .kp-wholepage-osrp .WwMm6e, .kp-wholepage-osrp .VjDLd, .kp-wholepage-osrp .g-card, .kp-wholepage-osrp .tsRboc,
+        .ULSxyf .g, .ULSxyf .kp-blk, .ULSxyf .vk_c, .ULSxyf .vtSz8d, .ULSxyf .MjjYud > div {
             background: transparent !important;
             background-color: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
         }
 
         /* Sleek Glass Search Box overrides */
