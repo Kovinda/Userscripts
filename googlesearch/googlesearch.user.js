@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0008
+// @version      2026.05.20.0009
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -309,7 +309,7 @@
                 color: ${hex1} !important;
             }
             
-            /* High-end glassmorphic active chip design matching premium card style */
+            /* Refined active chip design with restrained accent fill */
             html body .mXwfNd[selected=""],
             html body .mXwfNd[aria-current="page"],
             html body [selected=""] .mXwfNd,
@@ -317,11 +317,10 @@
             html body a.NQyKp[selected=""],
             html body a.NQyKp[aria-current="page"],
             html body a.NQyKp.Maj6Tc {
-                background: linear-gradient(135deg, rgba(var(--tm-accent-rgb), 0.45) 0%, rgba(var(--tm-accent-rgb), 0.18) 100%), rgba(15, 15, 15, 0.7) !important;
-                color: #ffffff !important;
-                border-color: rgba(var(--tm-accent-rgb), 0.6) !important;
-                box-shadow: 0 6px 20px 0 rgba(var(--tm-accent-rgb), 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
-                transform: translateY(-1px) !important;
+                background: linear-gradient(135deg, rgba(var(--tm-accent-rgb), 0.22) 0%, rgba(var(--tm-accent-rgb), 0.08) 100%), rgba(8, 8, 8, 0.55) !important;
+                color: var(--tm-accent-text, #ffffff) !important;
+                border-color: rgba(var(--tm-accent-rgb), 0.5) !important;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 12px rgba(var(--tm-accent-rgb), 0.25) !important;
             }
             
             html body .mXwfNd[selected=""] *,
@@ -337,8 +336,9 @@
             /* Inactive chip subtle dynamic accent border tinting & deep backing */
             html body .mXwfNd:not([selected]):not([aria-current="page"]),
             html body a.NQyKp:not([selected]):not([aria-current="page"]):not(.Maj6Tc) {
-                border-color: rgba(var(--tm-accent-rgb), 0.25) !important;
-                background-color: rgba(15, 15, 15, 0.75) !important;
+                border-color: rgba(var(--tm-accent-rgb), 0.18) !important;
+                background-color: rgba(10, 10, 10, 0.55) !important;
+                color: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
             }
 
             /* Dynamic colors for page results text contrast */
@@ -572,7 +572,7 @@
             box-sizing: border-box !important;
             padding: 0 18px !important; /* Perfect luxury horizontal spacing */
             border-radius: 100px !important; /* Ultra-smooth modern pill curvature matching premium cards */
-            background-color: rgba(15, 15, 15, 0.75) !important; /* Deep dark frosted glass for high legibility */
+            background-color: rgba(10, 10, 10, 0.55) !important; /* Deep dark frosted glass for high legibility */
             backdrop-filter: blur(20px) saturate(140%) !important;
             -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -629,9 +629,9 @@
         html body a.NQyKp[selected=""],
         html body a.NQyKp[aria-current="page"],
         html body a.NQyKp.Maj6Tc {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%), rgba(15, 15, 15, 0.7) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%), rgba(8, 8, 8, 0.55) !important;
+            border-color: rgba(255, 255, 255, 0.22) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
         }
 
         html body .mXwfNd[selected=""] *,
@@ -654,7 +654,7 @@
 
         /* High-end Navigation chips styling for knowledge panel tabs */
         html body a.NQyKp {
-            background-color: rgba(15, 15, 15, 0.75) !important; /* Deep dark frosted glass for high legibility */
+            background-color: rgba(10, 10, 10, 0.55) !important; /* Deep dark frosted glass for high legibility */
             backdrop-filter: blur(20px) saturate(140%) !important;
             -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -688,6 +688,10 @@
         html body .kp-wholepage-osrp,
         html body .kp-wholepage-osrp > div,
         html body .kp-wholepage-osrp .xfX4Ac,
+        html body .kp-wholepage-osrp .YB4h9,
+        html body .kp-wholepage-osrp .ky4hfd,
+        html body .kp-wholepage-osrp .q7XNbb,
+        html body .kp-wholepage-osrp .dNS45b,
         html body #rhs .kp-wholepage-osrp,
         html body #rhs .kp-wholepage-osrp > div,
         html body #rhs .kp-wholepage-osrp .xfX4Ac,
@@ -699,6 +703,8 @@
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             border: none !important;
+            padding: 0 !important;
+            margin-bottom: 0 !important;
         }
 
         /* Strip backgrounds and blurs on ALL descendant layout elements inside cards to allow our custom glass to show through */
