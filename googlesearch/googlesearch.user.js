@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0006
+// @version      2026.05.19.0007
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -380,6 +380,46 @@
     // =================================================================
 
     GM_addStyle(`
+        :root {
+            /* Override Google OSRP Dynamic Theme Background Variables to be fully transparent */
+            --vZe0jb: transparent !important;
+            --nwXobb: transparent !important;
+            --ZEpPmd: transparent !important;
+            --QWaaaf: transparent !important;
+            --DEeStf: transparent !important;
+            --TSWZIb: transparent !important;
+            --BRLwE: transparent !important;
+            --Aqn7xd: transparent !important;
+            --gS5jXb: transparent !important;
+            --JclFj: transparent !important;
+            --mXZkqc: transparent !important;
+            --XKMDxc: transparent !important;
+            --aYn2S: transparent !important;
+            --Lm570b: transparent !important;
+            --KIZPne: transparent !important;
+            --EpFNW: transparent !important;
+            --Xqboce: transparent !important;
+            
+            /* Override Google OSRP Dynamic Theme Text Variables to use our premium tinted text system */
+            --VuZXBd: var(--tm-text-primary, #e8eaed) !important;
+            --uLz37c: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
+            --jINu6c: var(--tm-text-primary, #e8eaed) !important;
+            --YLNNHc: var(--tm-text-primary, #e8eaed) !important;
+            --bbQxAb: var(--tm-text-primary, #e8eaed) !important;
+            --xPpiM: var(--tm-text-primary, #e8eaed) !important;
+            --IXoxUe: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
+
+            /* Override Google OSRP Dynamic Theme Link & Accent Variables to use our dynamic wallpaper vibrant colors */
+            --TyVYld: var(--tm-accent-1, #e8eaed) !important;
+            --TMYS9: var(--tm-accent-1, #e8eaed) !important;
+            --JKqx2: var(--tm-accent-1, #e8eaed) !important;
+            --rrJJUc: var(--tm-accent-1, #e8eaed) !important;
+            --Nsm0ce: var(--tm-accent-1, #e8eaed) !important;
+            --ywz01c: var(--tm-accent-1, #e8eaed) !important;
+            --Ehh4mf: var(--tm-accent-1, #e8eaed) !important;
+            --vdwxpe: var(--tm-accent-2, #e8eaed) !important;
+        }
+
         html, body {
             background-color: transparent !important;
             background: transparent !important;
