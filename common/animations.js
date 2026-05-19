@@ -525,19 +525,48 @@ window.SharedUI.motionPresets = {
 
 window.SharedUI.animateWithMotion = (element, animName, options = {}) => {
     if (!element) return;
-    const preset = window.SharedUI.motionPresets[animName] || window.SharedUI.motionPresets.sweepDown;
     const duration = parseFloat(options.duration) || 1.5;
     const ease = options.ease || "ease-out";
 
-    // Set initial resting state
-    if (preset.initial) {
-        Object.assign(element.style, preset.initial);
+    // 1. Check if it is a CSS Keyframe-based animation preset
+    const cssPreset = window.SharedUI.animationPresets[animName];
+    if (cssPreset) {
+        // Set initial resting state
+        if (cssPreset.initial) {
+            element.style.cssText += ";" + cssPreset.initial;
+        }
+
+        // Dynamically inject/compile the CSS keyframe definition
+        let styleEl = document.getElementById("tm-bg-reveal-keyframes");
+        if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = "tm-bg-reveal-keyframes";
+            document.head.appendChild(styleEl);
+        }
+        styleEl.textContent = cssPreset.keyframes;
+
+        // Apply native CSS animation
+        element.style.animation = `bgReveal ${duration}s ${ease} forwards`;
+        return;
     }
 
-    if (typeof Motion !== "undefined" && Motion.animate) {
-        return Motion.animate(element, preset.target, { duration, ease });
-    } else {
-        console.error("[SharedUI] Motion JS global not found. Ensure @require https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js is in script header.");
+    // 2. Check if it is a Motion.js animation preset
+    const motionPreset = window.SharedUI.motionPresets[animName] || window.SharedUI.motionPresets.cinematicPull;
+    if (motionPreset) {
+        // Set initial resting state
+        if (motionPreset.initial) {
+            Object.assign(element.style, motionPreset.initial);
+        }
+
+        if (typeof Motion !== "undefined" && Motion.animate) {
+            return Motion.animate(element, motionPreset.target, { duration, ease });
+        } else {
+            console.warn("[SharedUI] Motion JS global not found. Falling back to CSS keyframe-based transition.");
+            element.style.transition = `opacity ${duration}s ${ease}, filter ${duration}s ${ease}, transform ${duration}s ${ease}`;
+            element.style.opacity = "1";
+            element.style.filter = "none";
+            element.style.transform = "none";
+        }
     }
 };
 
