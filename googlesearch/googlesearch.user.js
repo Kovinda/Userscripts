@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0001
+// @version      2026.05.20.0002
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -527,21 +527,7 @@
             -webkit-backdrop-filter: none !important;
         }
 
-        /* Float search category navigation bar as a gorgeous glass pill container */
-        html body .YNk70c.iFBYke {
-            background: transparent !important;
-            background-color: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            padding: 0 !important;
-            margin: 15px 0 20px 0 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-        }
+
 
         /* Category navigation list flex layouts reset */
         html body .beZ0tf {
@@ -583,14 +569,30 @@
 
         /* Flex wrap and layout inner text nodes */
         html body .mXwfNd {
-            padding: 6px 14px !important;
-            border-radius: 20px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 32px !important;
+            box-sizing: border-box !important;
+            padding: 0 16px !important;
+            border-radius: 16px !important;
             background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             border: 1px solid var(--tm-glass-card-border, var(--tm-glass-border, rgba(255, 255, 255, 0.08))) !important;
             box-shadow: var(--tm-glass-shadow, 0 4px 12px rgba(0, 0, 0, 0.15)) !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Ensure inner content of chips is perfectly centered vertically and horizontally */
+        html body .mXwfNd .mVH5Fc {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         /* Interactive hover tabs */
