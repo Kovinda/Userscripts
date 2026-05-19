@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0003
+// @version      2026.05.19.0004
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -377,12 +377,11 @@
         /* Set premium Google Search cards transparent with customizable glass settings */
         /* Targets only outermost container blocks for left hand and right hand sides */
         .g, 
-        .kp-wholepage-osrp, 
-        .kp-blk:not(.kp-wholepage-osrp .kp-blk),
+        .kp-blk, 
         .vk_c, 
         .vtSz8d,
-        .MjjYud > div,
-        .ULSxyf {
+        .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)),
+        .ULSxyf:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)) {
             background-color: var(--tm-glass-bg, rgba(15, 15, 15, 0.45)) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
@@ -398,7 +397,8 @@
         .g .tF23xf, .g .hlcw0c, .g .ifM9O, .g .eqAnXb, .g .cUnQKe, .g .Uo81ke, .g .WwMm6e, .g .VjDLd, .g .xpd, .g .g-card, .g .card-section,
         .MjjYud > div .tF23xf, .MjjYud > div .hlcw0c, .MjjYud > div .ifM9O, .MjjYud > div .eqAnXb, .MjjYud > div .cUnQKe, .MjjYud > div .Uo81ke, .MjjYud > div .WwMm6e, .MjjYud > div .VjDLd, .MjjYud > div .xpd, .MjjYud > div .g-card, .MjjYud > div .card-section,
         .vtSz8d .tF23xf, .vtSz8d .hlcw0c, .vtSz8d .ifM9O, .vtSz8d .eqAnXb, .vtSz8d .cUnQKe, .vtSz8d .Uo81ke, .vtSz8d .WwMm6e, .vtSz8d .VjDLd, .vtSz8d .xpd, .vtSz8d .g-card, .vtSz8d .card-section,
-        .kp-wholepage-osrp .kp-blk, .kp-wholepage-osrp .card-section, .kp-wholepage-osrp .WwMm6e, .kp-wholepage-osrp .VjDLd, .kp-wholepage-osrp .g-card, .kp-wholepage-osrp .tsRboc,
+        .kp-blk .card-section, .kp-blk .WwMm6e, .kp-blk .VjDLd, .kp-blk .g-card, .kp-blk .tsRboc,
+        .kp-wholepage-osrp, .tsRboc,
         .ULSxyf .g, .ULSxyf .kp-blk, .ULSxyf .vk_c, .ULSxyf .vtSz8d, .ULSxyf .MjjYud > div {
             background: transparent !important;
             background-color: transparent !important;
