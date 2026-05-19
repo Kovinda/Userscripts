@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0011
+// @version      2026.05.20.0012
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -755,6 +755,17 @@
         html body .kp-wholepage-osrp a.NQyKp:hover {
             background: transparent !important;
             box-shadow: none !important;
+        }
+
+        /* Glass backdrop for the cast carousel block */
+        html body .kp-wholepage-osrp .wDYxhc[data-attrid="kc:/tv/tv_program:cast"] {
+            background: var(--tm-glass-strong-bg, rgba(18, 18, 18, 0.6)) !important;
+            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.16)) !important;
+            border-radius: 20px !important;
+            padding: 14px 16px !important;
+            box-shadow: var(--tm-glass-shadow, 0 10px 22px rgba(0, 0, 0, 0.35)) !important;
+            backdrop-filter: blur(18px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
         }
 
         /* Strip backgrounds and blurs on ALL descendant layout elements inside cards to allow our custom glass to show through */
