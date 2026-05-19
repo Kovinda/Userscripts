@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0006
+// @version      2026.05.20.0007
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -314,10 +314,10 @@
             html body .mXwfNd[aria-current="page"],
             html body [selected=""] .mXwfNd,
             html body [aria-current="page"] .mXwfNd {
-                background: linear-gradient(135deg, rgba(var(--tm-accent-rgb), 0.22) 0%, rgba(var(--tm-accent-rgb), 0.08) 100%) !important;
+                background: linear-gradient(135deg, rgba(var(--tm-accent-rgb), 0.45) 0%, rgba(var(--tm-accent-rgb), 0.18) 100%), rgba(15, 15, 15, 0.7) !important;
                 color: #ffffff !important;
-                border-color: rgba(var(--tm-accent-rgb), 0.45) !important;
-                box-shadow: 0 6px 20px 0 rgba(var(--tm-accent-rgb), 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+                border-color: rgba(var(--tm-accent-rgb), 0.6) !important;
+                box-shadow: 0 6px 20px 0 rgba(var(--tm-accent-rgb), 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
                 transform: translateY(-1px) !important;
             }
             
@@ -328,9 +328,10 @@
                 color: #ffffff !important;
             }
 
-            /* Inactive chip subtle dynamic accent border tinting */
+            /* Inactive chip subtle dynamic accent border tinting & deep backing */
             html body .mXwfNd:not([selected]):not([aria-current="page"]) {
-                border-color: rgba(var(--tm-accent-rgb), 0.18) !important;
+                border-color: rgba(var(--tm-accent-rgb), 0.25) !important;
+                background-color: rgba(15, 15, 15, 0.75) !important;
             }
 
             /* Dynamic colors for page results text contrast */
@@ -563,9 +564,9 @@
             box-sizing: border-box !important;
             padding: 0 18px !important; /* Perfect luxury horizontal spacing */
             border-radius: 100px !important; /* Ultra-smooth modern pill curvature matching premium cards */
-            background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.45)) !important;
-            backdrop-filter: var(--tm-glass-filter, blur(24px) saturate(140%)) !important;
-            -webkit-backdrop-filter: var(--tm-glass-filter, blur(24px) saturate(140%)) !important;
+            background-color: rgba(15, 15, 15, 0.75) !important; /* Deep dark frosted glass for high legibility */
+            backdrop-filter: blur(20px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             box-shadow: var(--tm-glass-shadow, 0 4px 15px rgba(0, 0, 0, 0.2)) !important;
             color: var(--tm-text-secondary, rgba(255, 255, 255, 0.75)) !important;
@@ -617,7 +618,7 @@
         html body .mXwfNd[aria-current="page"],
         html body [selected=""] .mXwfNd,
         html body [aria-current="page"] .mXwfNd {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%), rgba(15, 15, 15, 0.7) !important;
             color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
