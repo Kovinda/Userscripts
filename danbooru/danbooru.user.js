@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Enhancer & Animated Backgrounds
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0001
+// @version      2026.05.19.0002
 // @description  Auto rating:safe, limit slider, and animated wallpapers with a DaisyUI settings panel. Individual transparent UI elements for manual theming.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -691,7 +691,7 @@
             extractPaletteFromDataUrl(dataUrl);
 
             if (SharedUI.Wallpaper) {
-                SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 60000);
+                SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 10000);
             }
         });
     };

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gemini Styles - Animation Templates + Quote + Color System
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0001
+// @version      2026.05.19.0002
 // @description  Animated wallpaper templates, settings panel, greeting blur-in, quote replacement, and palette-driven theming
 // @author       Kovinda
 // @match        *://gemini.google.com/*
@@ -1279,7 +1279,7 @@
 
         if (responseHeaders && SharedUI.Wallpaper) {
             SharedUI.Wallpaper.setInitialFingerprint(responseHeaders);
-            SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 60000);
+            SharedUI.Wallpaper.startPoller(BACKGROUND_IMAGE_URL, transitionToNewWallpaper, 10000);
         }
 
         console.log(`[Gemini Styles] Applied animation template: ${settings.animation}`);

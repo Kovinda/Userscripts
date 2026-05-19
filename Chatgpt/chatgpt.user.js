@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CHATGPT Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0001
+// @version      2026.05.19.0002
 // @description  Background image, transparent UI, glitch loop, smart formatted quotes, and palette-driven theming
 // @author       Kovinda
 // @match        https://chat.openai.com/*
@@ -213,7 +213,7 @@
                 extractPaletteFromDataUrl(dataUrl);
                 
                 if (SharedUI.Wallpaper) {
-                    SharedUI.Wallpaper.startPoller('http://127.0.0.1:8190/ActiveBackground.jpg', transitionToNewWallpaper, 60000);
+                    SharedUI.Wallpaper.startPoller('http://127.0.0.1:8190/ActiveBackground.jpg', transitionToNewWallpaper, 10000);
                 }
             };
             reader.readAsDataURL(response.response);
