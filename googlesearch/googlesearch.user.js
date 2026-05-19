@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0009
+// @version      2026.05.19.0010
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -438,6 +438,8 @@
         html body .kp-blk, 
         html body .vk_c, 
         html body .vtSz8d,
+        html body .ZHugbd,
+        html body .UivI7b,
         html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)),
         html body .ULSxyf:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)) {
             background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
@@ -467,7 +469,9 @@
         .kp-blk .tF23xf, .kp-blk .hlcw0c, .kp-blk .ifM9O, .kp-blk .eqAnXb, .kp-blk .cUnQKe, .kp-blk .Uo81ke, .kp-blk .WwMm6e, .kp-blk .VjDLd, .kp-blk .xpd, .kp-blk .g-card, .kp-blk .card-section, .kp-blk .tsRboc,
         .vtSz8d .tF23xf, .vtSz8d .hlcw0c, .vtSz8d .ifM9O, .vtSz8d .eqAnXb, .vtSz8d .cUnQKe, .vtSz8d .Uo81ke, .vtSz8d .WwMm6e, .vtSz8d .VjDLd, .vtSz8d .xpd, .vtSz8d .g-card, .vtSz8d .card-section,
         .MjjYud > div .tF23xf, .MjjYud > div .hlcw0c, .MjjYud > div .ifM9O, .MjjYud > div .eqAnXb, .MjjYud > div .cUnQKe, .MjjYud > div .Uo81ke, .MjjYud > div .WwMm6e, .MjjYud > div .VjDLd, .MjjYud > div .xpd, .MjjYud > div .g-card, .MjjYud > div .card-section,
-        .ULSxyf .tF23xf, .ULSxyf .hlcw0c, .ULSxyf .ifM9O, .ULSxyf .eqAnXb, .ULSxyf .cUnQKe, .ULSxyf .Uo81ke, .ULSxyf .WwMm6e, .ULSxyf .VjDLd, .ULSxyf .xpd, .ULSxyf .g-card, .ULSxyf .card-section {
+        .ULSxyf .tF23xf, .ULSxyf .hlcw0c, .ULSxyf .ifM9O, .ULSxyf .eqAnXb, .ULSxyf .cUnQKe, .ULSxyf .Uo81ke, .ULSxyf .WwMm6e, .ULSxyf .VjDLd, .ULSxyf .xpd, .ULSxyf .g-card, .ULSxyf .card-section,
+        .ZHugbd .tF23xf, .ZHugbd .hlcw0c, .ZHugbd .ifM9O, .ZHugbd .eqAnXb, .ZHugbd .cUnQKe, .ZHugbd .Uo81ke, .ZHugbd .WwMm6e, .ZHugbd .VjDLd, .ZHugbd .xpd, .ZHugbd .g-card, .ZHugbd .card-section, .ZHugbd .MfFufe,
+        .UivI7b .tF23xf, .UivI7b .hlcw0c, .UivI7b .ifM9O, .UivI7b .eqAnXb, .UivI7b .cUnQKe, .UivI7b .Uo81ke, .UivI7b .WwMm6e, .UivI7b .VjDLd, .UivI7b .xpd, .UivI7b .g-card, .UivI7b .card-section, .UivI7b .MfFufe {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
