@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0016
+// @version      2026.05.20.0001
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -318,6 +318,7 @@
                 background-color: ${hex1} !important;
                 color: ${textColor1} !important;
                 box-shadow: 0 4px 14px 0 color-mix(in srgb, ${hex1} 30%, rgba(0, 0, 0, 0.3)) !important;
+                border-color: transparent !important;
             }
             
             html body [selected=""] span,
@@ -528,16 +529,16 @@
 
         /* Float search category navigation bar as a gorgeous glass pill container */
         html body .YNk70c.iFBYke {
-            background-color: var(--tm-glass-header-bg, rgba(15, 15, 15, 0.45)) !important;
-            backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
-            border-radius: 30px !important;
-            padding: 6px 18px !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            padding: 0 !important;
             margin: 15px 0 20px 0 !important;
             display: inline-flex !important;
             align-items: center !important;
-            box-shadow: var(--tm-glass-shadow, 0 8px 32px 0 rgba(0, 0, 0, 0.25)) !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
         }
@@ -547,7 +548,7 @@
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 8px !important;
             padding: 0 !important;
             margin: 0 !important;
         }
@@ -584,6 +585,12 @@
         html body .mXwfNd {
             padding: 6px 14px !important;
             border-radius: 20px !important;
+            background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
+            backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
+            -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
+            border: 1px solid var(--tm-glass-card-border, var(--tm-glass-border, rgba(255, 255, 255, 0.08))) !important;
+            box-shadow: var(--tm-glass-shadow, 0 4px 12px rgba(0, 0, 0, 0.15)) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         /* Interactive hover tabs */
@@ -591,9 +598,11 @@
         html body .C6AK7c:hover .mXwfNd,
         html body .XVMlrc:hover .mXwfNd,
         html body .mOKdDc:hover .mXwfNd {
-            background-color: rgba(255, 255, 255, 0.08) !important;
+            background-color: rgba(255, 255, 255, 0.15) !important;
             color: var(--tm-text-primary, #ffffff) !important;
             transform: translateY(-1px) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3) !important;
         }
 
         /* Strip default category bottom line indicators */
