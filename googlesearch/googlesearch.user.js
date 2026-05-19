@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0004
+// @version      2026.05.19.0005
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -243,6 +243,11 @@
         const accentRgb = p.colors[0].join(', ');
         const selection = p.rgba(p.colors[0], 0.35);
 
+        // Derive high-end tinted card colors using the shared SharedUI color utilities
+        const darkenedVibrant = SharedUI.darkenRgb(p.colors[0], 0.5);
+        const cardBg = p.rgba(darkenedVibrant, 0.35);
+        const cardBorder = p.rgba(p.colors[0], 0.15);
+
         const accentCSS = `
             :root {
                 --tm-accent-1: ${hex1};
@@ -256,6 +261,14 @@
                 --link: ${hex1};
                 --link-hover: ${hex2};
                 --selection: ${selection};
+                
+                /* Dynamic Premium Card Glass Colors */
+                --tm-glass-card-bg: ${cardBg} !important;
+                --tm-glass-card-border: ${cardBorder} !important;
+                
+                /* Dynamic Premium Text Contrast Tinting */
+                --tm-text-primary: color-mix(in oklab, ${hex1} 15%, ${textColor1}) !important;
+                --tm-text-secondary: color-mix(in oklab, ${hex2} 30%, ${textColor1}) !important;
             }
 
             /* Google search titles colors mapping dynamically */
@@ -298,7 +311,12 @@
 
             /* Dynamic colors for page results text contrast */
             body, #cnt, #rcnt, .g, .kp-blk, .vk_c, .WwMm6e, .MjjYbeb, .VjDLd {
-                color: ${textColor1} !important;
+                color: var(--tm-text-primary, #e8eaed) !important;
+            }
+
+            /* Secondary search snippets and metadata styling */
+            .VwiC3b, .VwiC3b *, .N15eKc, .N15eKc *, .MUxGbd, .MUxGbd *, .fG8Fp, .fG8Fp *, .sub-text, .metadata, .lEB1S, .lEB1S * {
+                color: var(--tm-text-secondary, rgba(255, 255, 255, 0.7)) !important;
             }
 
             /* custom selection highlights */
@@ -382,10 +400,10 @@
         .vtSz8d,
         .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)),
         .ULSxyf:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)) {
-            background-color: var(--tm-glass-bg, rgba(15, 15, 15, 0.45)) !important;
+            background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
-            border: 1px solid var(--tm-glass-border, rgba(255, 255, 255, 0.08)) !important;
+            border: 1px solid var(--tm-glass-card-border, var(--tm-glass-border, rgba(255, 255, 255, 0.08))) !important;
             border-radius: 16px !important;
             padding: 20px !important;
             margin-bottom: 20px !important;
