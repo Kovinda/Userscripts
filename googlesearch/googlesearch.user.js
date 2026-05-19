@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0011
+// @version      2026.05.19.0012
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -440,8 +440,8 @@
         html body .vtSz8d,
         html body div.ZHugbd,
         html body div.UivI7b,
-        html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)),
-        html body .ULSxyf:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)) {
+        html body .kp-wholepage-osrp,
+        html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)):has(a) {
             background-color: var(--tm-glass-card-bg, var(--tm-glass-bg, rgba(15, 15, 15, 0.45))) !important;
             backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
             -webkit-backdrop-filter: var(--tm-glass-filter, blur(10px)) !important;
@@ -454,8 +454,8 @@
         }
 
         /* Strip backgrounds on dynamic Google OSRP wholepage panel structures */
-        html body .kp-wholepage-osrp,
-        html body .kp-wholepage-osrp[class] {
+        html body .kp-wholepage-osrp > div,
+        html body .kp-wholepage-osrp .xfX4Ac {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
