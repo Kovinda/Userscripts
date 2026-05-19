@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.20.0007
+// @version      2026.05.20.0008
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -313,7 +313,10 @@
             html body .mXwfNd[selected=""],
             html body .mXwfNd[aria-current="page"],
             html body [selected=""] .mXwfNd,
-            html body [aria-current="page"] .mXwfNd {
+            html body [aria-current="page"] .mXwfNd,
+            html body a.NQyKp[selected=""],
+            html body a.NQyKp[aria-current="page"],
+            html body a.NQyKp.Maj6Tc {
                 background: linear-gradient(135deg, rgba(var(--tm-accent-rgb), 0.45) 0%, rgba(var(--tm-accent-rgb), 0.18) 100%), rgba(15, 15, 15, 0.7) !important;
                 color: #ffffff !important;
                 border-color: rgba(var(--tm-accent-rgb), 0.6) !important;
@@ -324,12 +327,16 @@
             html body .mXwfNd[selected=""] *,
             html body .mXwfNd[aria-current="page"] *,
             html body [selected=""] .mXwfNd *,
-            html body [aria-current="page"] .mXwfNd * {
+            html body [aria-current="page"] .mXwfNd *,
+            html body a.NQyKp[selected=""] *,
+            html body a.NQyKp[aria-current="page"] *,
+            html body a.NQyKp.Maj6Tc * {
                 color: #ffffff !important;
             }
 
             /* Inactive chip subtle dynamic accent border tinting & deep backing */
-            html body .mXwfNd:not([selected]):not([aria-current="page"]) {
+            html body .mXwfNd:not([selected]):not([aria-current="page"]),
+            html body a.NQyKp:not([selected]):not([aria-current="page"]):not(.Maj6Tc) {
                 border-color: rgba(var(--tm-accent-rgb), 0.25) !important;
                 background-color: rgba(15, 15, 15, 0.75) !important;
             }
@@ -465,7 +472,6 @@
         html body .vtSz8d,
         html body div.ZHugbd,
         html body div.UivI7b,
-        html body .kp-wholepage-osrp:not(#rhs *),
         html body #jOAHU > .A6K0A,
         html body .MjjYud > div:not(:has(.g)):not(:has(.kp-blk)):not(:has(.vtSz8d)):has(a) {
             background-color: var(--tm-glass-strong-bg, rgba(20, 20, 20, 0.6)) !important;
@@ -533,7 +539,9 @@
         html body [role="listitem"] a,
         html body .yeKjxb,
         html body .mOKdDc,
-        html body .mTpL7c {
+        html body .mTpL7c,
+        html body .Enb9pe,
+        html body #JTPWx {
             background: transparent !important;
             background-color: transparent !important;
             box-shadow: none !important;
@@ -617,30 +625,67 @@
         html body .mXwfNd[selected=""],
         html body .mXwfNd[aria-current="page"],
         html body [selected=""] .mXwfNd,
-        html body [aria-current="page"] .mXwfNd {
+        html body [aria-current="page"] .mXwfNd,
+        html body a.NQyKp[selected=""],
+        html body a.NQyKp[aria-current="page"],
+        html body a.NQyKp.Maj6Tc {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%), rgba(15, 15, 15, 0.7) !important;
-            color: #ffffff !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
-            transform: translateY(-1px) !important;
         }
 
         html body .mXwfNd[selected=""] *,
-        html body .mXwfNd[aria-current="page"] * {
+        html body .mXwfNd[aria-current="page"] *,
+        html body a.NQyKp[selected=""] *,
+        html body a.NQyKp[aria-current="page"] *,
+        html body a.NQyKp.Maj6Tc * {
             color: #ffffff !important;
         }
 
         /* Clean up any residual category styling from Google default theme */
         html body .mXwfNd::after,
         html body .C6AK7c::after,
-        html body [role="listitem"]::after {
+        html body [role="listitem"]::after,
+        html body a.NQyKp::after {
             display: none !important;
             content: none !important;
             border-bottom: none !important;
         }
 
+        /* High-end Navigation chips styling for knowledge panel tabs */
+        html body a.NQyKp {
+            background-color: rgba(15, 15, 15, 0.75) !important; /* Deep dark frosted glass for high legibility */
+            backdrop-filter: blur(20px) saturate(140%) !important;
+            -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: var(--tm-glass-shadow, 0 4px 15px rgba(0, 0, 0, 0.2)) !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+
+        /* Ensure text and inner elements of knowledge panel chips are styled beautifully and legibly */
+        html body a.NQyKp,
+        html body a.NQyKp *,
+        html body a.NQyKp span.b0Xfjd {
+            color: var(--tm-text-secondary, rgba(255, 255, 255, 0.75)) !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+        }
+
+        /* Interactive premium hover transitions */
+        html body a.NQyKp:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(var(--tm-accent-rgb, 255, 255, 255), 0.35) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 10px rgba(var(--tm-accent-rgb, 255, 255, 255), 0.25) !important;
+        }
+        
+        html body a.NQyKp:hover *,
+        html body a.NQyKp:hover span.b0Xfjd {
+            color: var(--tm-accent-1, #ffffff) !important;
+        }
 
         /* Strip backgrounds on dynamic Google OSRP wholepage panel structures */
+        html body .kp-wholepage-osrp,
         html body .kp-wholepage-osrp > div,
         html body .kp-wholepage-osrp .xfX4Ac,
         html body #rhs .kp-wholepage-osrp,
