@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0007
+// @version      2026.05.19.0008
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -380,7 +380,7 @@
     // =================================================================
 
     GM_addStyle(`
-        :root {
+        * {
             /* Override Google OSRP Dynamic Theme Background Variables to be fully transparent */
             --vZe0jb: transparent !important;
             --nwXobb: transparent !important;
