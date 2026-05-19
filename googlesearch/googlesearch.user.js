@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GOOGLE Theme
 // @namespace    http://tampermonkey.net/
-// @version      2026.05.19.0013
+// @version      2026.05.19.0014
 // @description  Background image, transparent UI, dynamic color extraction, and palette-driven theming matching CHATGPT Theme
 // @author       Kovinda
 // @match        *://*.google.com/search*
@@ -452,6 +452,38 @@
             margin-bottom: 20px !important;
             box-shadow: var(--tm-glass-shadow, 0 8px 32px 0 rgba(0, 0, 0, 0.2)) !important;
             transition: all 0.3s ease !important;
+        }
+
+        /* Special dynamic vibrant color styling for visual digest cards inside .VNzqVe */
+        html body .VNzqVe .CYJS5e,
+        html body .VNzqVe .D7ethf,
+        html body .VNzqVe .ZHugbd,
+        html body .VNzqVe .UivI7b {
+            background-color: color-mix(in srgb, var(--tm-accent-1, rgba(0, 255, 65, 0.4)) 15%, rgba(15, 15, 15, 0.5)) !important;
+            border: 1px solid color-mix(in srgb, var(--tm-accent-1, rgba(0, 255, 65, 0.4)) 35%, rgba(255, 255, 255, 0.1)) !important;
+            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        html body .VNzqVe .CYJS5e:hover,
+        html body .VNzqVe .D7ethf:hover,
+        html body .VNzqVe .ZHugbd:hover,
+        html body .VNzqVe .UivI7b:hover {
+            background-color: color-mix(in srgb, var(--tm-accent-1, rgba(0, 255, 65, 0.4)) 22%, rgba(15, 15, 15, 0.5)) !important;
+            border-color: color-mix(in srgb, var(--tm-accent-1, rgba(0, 255, 65, 0.4)) 55%, rgba(255, 255, 255, 0.2)) !important;
+            box-shadow: 0 8px 32px 0 color-mix(in srgb, var(--tm-accent-1, rgba(0, 255, 65, 0.4)) 15%, rgba(0, 0, 0, 0.4)) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* Strip backgrounds on inner child containers of .VNzqVe cards */
+        .VNzqVe .CYJS5e div,
+        .VNzqVe .D7ethf div,
+        .VNzqVe .ZHugbd div,
+        .VNzqVe .UivI7b div {
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
         }
 
         /* Strip backgrounds on dynamic Google OSRP wholepage panel structures */
