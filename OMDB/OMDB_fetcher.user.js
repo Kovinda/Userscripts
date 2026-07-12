@@ -83,60 +83,100 @@
     const titleElements = document.querySelectorAll('.article__title.entry-title');
     if (!titleElements.length) return;
 
+    // Helper to clean title strings from year/OST/soundtrack tags to improve search match accuracy
+    function cleanTitle(title) {
+        let cleaned = title.trim();
+        // Remove trailing year in parentheses, e.g., (2026) or (2025)
+        cleaned = cleaned.replace(/\s*\(\d{4}\)/g, '');
+        // Remove common suffixes like OST, SoundTrack, Part 1, etc.
+        cleaned = cleaned.replace(/\s*-\s*Part\s*\d+/gi, '');
+        cleaned = cleaned.replace(/\s*OST\s*.*/gi, '');
+        cleaned = cleaned.replace(/\s*Soundtrack\s*.*/gi, '');
+        return cleaned.trim();
+    }
+
     titleElements.forEach(titleElement => {
-        const movieTitle = encodeURIComponent(titleElement.textContent.trim());
-        const searchUrl = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${movieTitle}`;
+        const rawTitle = titleElement.textContent.trim();
+        const cleanedTitle = cleanTitle(rawTitle);
+        
+        // Create and insert a fallback/loading badge immediately to prevent layout shift (CLS)
+        const badge = document.createElement('a');
+        badge.className = 'imdb-rating-badge';
+        badge.target = '_blank';
+        badge.rel = 'noopener noreferrer';
+        // Fallback search link directly to IMDb's smart search engine
+        badge.href = `https://www.imdb.com/find?q=${encodeURIComponent(cleanedTitle)}`;
+        badge.innerHTML = `
+            <span class="imdb-label">IMDb</span>
+            <span class="imdb-stars">
+                <span class="imdb-score">N/A</span>
+            </span>
+        `;
+        titleElement.parentNode.insertBefore(badge, titleElement.nextSibling);
+
+        const searchUrl = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(cleanedTitle)}`;
 
         GM_xmlhttpRequest({
             method: "GET",
             url: searchUrl,
             onload: function(response) {
-                const data = JSON.parse(response.responseText);
-                if (data.Response === "True" && data.Search.length > 0) {
-                    const imdbID = data.Search[0].imdbID;
-                    fetchIMDbRating(imdbID, titleElement);
-                } else {
-                    console.warn("No IMDb data found for", movieTitle);
+                try {
+                    const data = JSON.parse(response.responseText);
+                    if (data.Response === "True" && data.Search.length > 0) {
+                        // Find the best match from the search results
+                        let bestMatch = data.Search.find(item => item.Title.toLowerCase() === cleanedTitle.toLowerCase());
+                        if (!bestMatch) {
+                            // Secondary fallback matching stripping non-alphanumeric chars
+                            const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
+                            bestMatch = data.Search.find(item => item.Title.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
+                        }
+                        
+                        const chosenItem = bestMatch || data.Search[0];
+                        fetchIMDbRating(chosenItem.imdbID, badge);
+                    } else {
+                        console.warn("No IMDb search results found for:", cleanedTitle);
+                    }
+                } catch (e) {
+                    console.error("Error parsing IMDb search response:", e);
                 }
             },
             onerror: function() {
-                console.error("Failed to fetch IMDb search results.");
+                console.error("Failed to perform IMDb search query.");
             }
         });
     });
 
-    function fetchIMDbRating(imdbID, element) {
+    function fetchIMDbRating(imdbID, badgeElement) {
         const ratingUrl = `https://www.omdbapi.com/?i=${imdbID}&apikey=${API_KEY}`;
         GM_xmlhttpRequest({
             method: "GET",
             url: ratingUrl,
             onload: function(response) {
-                const data = JSON.parse(response.responseText);
-                if (data.Response === "True" && data.imdbRating) {
-                    // Create the premium IMDb rating badge
-                    const badge = document.createElement('a');
-                    badge.href = `https://www.imdb.com/title/${imdbID}/`;
-                    badge.target = '_blank';
-                    badge.rel = 'noopener noreferrer';
-                    badge.className = 'imdb-rating-badge';
-                    
-                    badge.innerHTML = `
-                        <span class="imdb-label">IMDb</span>
-                        <span class="imdb-stars">
-                            <svg class="imdb-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                            </svg>
-                            <span class="imdb-score">${data.imdbRating}</span>
-                        </span>
-                    `;
-                    
-                    element.parentNode.insertBefore(badge, element.nextSibling);
-                } else {
-                    console.warn("No IMDb rating found for", imdbID);
+                try {
+                    const data = JSON.parse(response.responseText);
+                    if (data.Response === "True") {
+                        // Update the badge link to point directly to the title page
+                        badgeElement.href = `https://www.imdb.com/title/${imdbID}/`;
+                        
+                        // Update rating display if a valid rating exists (and is not N/A)
+                        if (data.imdbRating && data.imdbRating !== "N/A") {
+                            badgeElement.innerHTML = `
+                                <span class="imdb-label">IMDb</span>
+                                <span class="imdb-stars">
+                                    <svg class="imdb-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
+                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg>
+                                    <span class="imdb-score">${data.imdbRating}</span>
+                                </span>
+                            `;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing rating payload:", e);
                 }
             },
             onerror: function() {
-                console.error("Failed to fetch IMDb rating.");
+                console.error("Failed to retrieve rating for IMDb ID:", imdbID);
             }
         });
     }
