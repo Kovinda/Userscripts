@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         IMDb Rating Fetcher
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-21
+// @version      2025-03-21.001
 // @description  try to take over the world!
 // @author       You
 // @match        https://dramaday.me/**
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=dramaday.me
 // @grant        GM_xmlhttpRequest
 // @run-at       document-end
+// @updateURL    https://github.com/Kovinda/Userscripts/raw/refs/heads/main/OMDB/OMDB_fetcher.user.js
+// @downloadURL  https://github.com/Kovinda/Userscripts/raw/refs/heads/main/OMDB/OMDB_fetcher.user.js
 // ==/UserScript==
 
 
@@ -181,4 +183,3 @@
         });
     }
 })();
-
