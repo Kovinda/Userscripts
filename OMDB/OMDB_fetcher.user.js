@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IMDb Rating Fetcher
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-21.003
+// @version      2025-03-21.004
 // @description  try to take over the world!
 // @author       You
 // @match        https://dramaday.me/**
@@ -166,7 +166,7 @@
             badge.className = 'imdb-rating-badge';
             badge.target = '_blank';
             badge.rel = 'noopener noreferrer';
-            // Fallback search link directly to IMDb's smart search engine
+            // Default search link directly to IMDb's search page
             badge.href = `https://www.imdb.com/find?q=${encodeURIComponent(cleanedTitle)}`;
             badge.innerHTML = `
                 <span class="imdb-label">IMDb</span>
@@ -176,40 +176,58 @@
 
             // Execute the fetch for this specific card and wait for it to complete/timeout
             await new Promise((resolve) => {
-                const searchUrl = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(cleanedTitle)}`;
+                // Generate path-friendly search term for IMDb's autocomplete API
+                const pathQuery = cleanedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+                if (!pathQuery) {
+                    resolve();
+                    return;
+                }
+                const firstChar = pathQuery.charAt(0);
+                const searchUrl = `https://sg.media-imdb.com/suggests/${firstChar}/${encodeURIComponent(pathQuery)}.json`;
+
                 GM_xmlhttpRequest({
                     method: "GET",
                     url: searchUrl,
                     timeout: 5000,
                     onload: function(response) {
                         try {
-                            const data = JSON.parse(response.responseText);
-                            if (data.Response === "True" && data.Search.length > 0) {
-                                // Find the best match from the search results
-                                let bestMatch = data.Search.find(item => item.Title.toLowerCase() === cleanedTitle.toLowerCase());
-                                if (!bestMatch) {
-                                    // Secondary fallback matching stripping non-alphanumeric chars
-                                    const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
-                                    bestMatch = data.Search.find(item => item.Title.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
+                            const text = response.responseText;
+                            const start = text.indexOf('(') + 1;
+                            const end = text.lastIndexOf(')');
+                            if (start > 0 && end > start) {
+                                const data = JSON.parse(text.substring(start, end));
+                                if (data && data.d && data.d.length > 0) {
+                                    // Find the best match from the suggestion results
+                                    let bestMatch = data.d.find(item => item.l.toLowerCase() === cleanedTitle.toLowerCase());
+                                    if (!bestMatch) {
+                                        const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
+                                        bestMatch = data.d.find(item => item.l.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
+                                    }
+                                    
+                                    const chosenItem = bestMatch || data.d[0];
+                                    const imdbID = chosenItem.id;
+                                    
+                                    // Update the link to the direct IMDb page immediately since we have the ID resolved
+                                    badge.href = `https://www.imdb.com/title/${imdbID}/`;
+                                    
+                                    // Fetch detailed rating data from OMDb API by ID
+                                    fetchRatings(imdbID, badge, container, cleanedTitle, resolve);
+                                    return;
                                 }
-                                
-                                const chosenItem = bestMatch || data.Search[0];
-                                fetchRatings(chosenItem.imdbID, badge, container, cleanedTitle, resolve);
-                            } else {
-                                console.warn("No IMDb search results found for:", cleanedTitle);
-                                resolve();
                             }
+                            console.warn("No IMDb suggestions found for:", cleanedTitle);
+                            resolve();
                         } catch (e) {
-                            console.error("Error parsing IMDb search response:", e);
+                            console.error("Error parsing IMDb suggestion response:", e);
                             resolve();
                         }
                     },
                     onerror: function() {
-                        console.error("Failed to perform IMDb search query.");
+                        console.error("Failed to query IMDb suggestions.");
                         resolve();
                     },
                     ontimeout: function() {
-                        console.warn("IMDb search query timed out for:", cleanedTitle);
+                        console.warn("IMDb suggestions query timed out for:", cleanedTitle);
                         resolve();
                     }
                 });
@@ -227,9 +245,6 @@
                 try {
                     const data = JSON.parse(response.responseText);
                     if (data.Response === "True") {
-                        // 1. Update the IMDb badge link to point directly to the title page
-                        imdbBadgeElement.href = `https://www.imdb.com/title/${imdbID}/`;
-                        
                         // Update IMDb rating display if a valid rating exists (and is not N/A)
                         if (data.imdbRating && data.imdbRating !== "N/A") {
                             const scoreSpan = document.createElement('span');
