@@ -1,0 +1,144 @@
+// ==UserScript==
+// @name         IMDb Rating Fetcher
+// @namespace    http://tampermonkey.net/
+// @version      2025-03-21
+// @description  try to take over the world!
+// @author       You
+// @match        https://dramaday.me/**
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=dramaday.me
+// @grant        GM_xmlhttpRequest
+// @run-at       document-end
+// ==/UserScript==
+
+
+(function() {
+    'use strict';
+
+    // Inject custom styles for the IMDb rating badge
+    const style = document.createElement('style');
+    style.textContent = `
+        .imdb-rating-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            font-family: 'Lato', sans-serif !important;
+            font-size: 11px !important;
+            height: 20px !important;
+            background-color: rgba(26, 25, 25, 0.9) !important;
+            color: #ffffff !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12) !important;
+            margin: 6px 0 8px 0 !important;
+            text-decoration: none !important;
+            vertical-align: middle !important;
+            width: fit-content !important;
+            transition: all 0.2s ease-in-out !important;
+            line-height: 1 !important;
+        }
+
+        .imdb-rating-badge:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+            border-color: #f5c518 !important;
+            background-color: #1a1919 !important;
+            color: #ffffff !important;
+        }
+
+        .imdb-rating-badge .imdb-label {
+            background-color: #f5c518 !important;
+            color: #000000 !important;
+            font-weight: 850 !important;
+            padding: 0 6px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            letter-spacing: -0.2px !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+        }
+
+        .imdb-rating-badge .imdb-stars {
+            padding: 0 6px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+
+        .imdb-rating-badge .imdb-score {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 11px !important;
+        }
+
+        .imdb-rating-badge .imdb-star-icon {
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    const API_KEY = '73041d6a'; // Replace with your OMDb API key if needed
+    const titleElements = document.querySelectorAll('.article__title.entry-title');
+    if (!titleElements.length) return;
+
+    titleElements.forEach(titleElement => {
+        const movieTitle = encodeURIComponent(titleElement.textContent.trim());
+        const searchUrl = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${movieTitle}`;
+
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: searchUrl,
+            onload: function(response) {
+                const data = JSON.parse(response.responseText);
+                if (data.Response === "True" && data.Search.length > 0) {
+                    const imdbID = data.Search[0].imdbID;
+                    fetchIMDbRating(imdbID, titleElement);
+                } else {
+                    console.warn("No IMDb data found for", movieTitle);
+                }
+            },
+            onerror: function() {
+                console.error("Failed to fetch IMDb search results.");
+            }
+        });
+    });
+
+    function fetchIMDbRating(imdbID, element) {
+        const ratingUrl = `https://www.omdbapi.com/?i=${imdbID}&apikey=${API_KEY}`;
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: ratingUrl,
+            onload: function(response) {
+                const data = JSON.parse(response.responseText);
+                if (data.Response === "True" && data.imdbRating) {
+                    // Create the premium IMDb rating badge
+                    const badge = document.createElement('a');
+                    badge.href = `https://www.imdb.com/title/${imdbID}/`;
+                    badge.target = '_blank';
+                    badge.rel = 'noopener noreferrer';
+                    badge.className = 'imdb-rating-badge';
+                    
+                    badge.innerHTML = `
+                        <span class="imdb-label">IMDb</span>
+                        <span class="imdb-stars">
+                            <svg class="imdb-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                            <span class="imdb-score">${data.imdbRating}</span>
+                        </span>
+                    `;
+                    
+                    element.parentNode.insertBefore(badge, element.nextSibling);
+                } else {
+                    console.warn("No IMDb rating found for", imdbID);
+                }
+            },
+            onerror: function() {
+                console.error("Failed to fetch IMDb rating.");
+            }
+        });
+    }
+})();
+
