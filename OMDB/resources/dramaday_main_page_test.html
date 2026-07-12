@@ -3195,8 +3195,13 @@ function GM_xmlhttpRequest(details) {
             border-color: #f5c518 !important;
         }
 
-        .rt-rating-badge:hover {
+        .rt-rating-badge.rt-critics:hover {
             border-color: #fa320a !important;
+            background-color: #1a1919 !important;
+        }
+
+        .rt-rating-badge.rt-audience:hover {
+            border-color: #2c6cb0 !important;
             background-color: #1a1919 !important;
         }
 
@@ -3215,6 +3220,18 @@ function GM_xmlhttpRequest(details) {
 
         .rt-rating-badge .rt-label {
             background-color: #fa320a !important;
+            color: #ffffff !important;
+            font-weight: 850 !important;
+            padding: 0 6px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+        }
+
+        .rt-rating-badge .rt-audience-label {
+            background-color: #2c6cb0 !important;
             color: #ffffff !important;
             font-weight: 850 !important;
             padding: 0 6px !important;
@@ -3267,8 +3284,8 @@ function GM_xmlhttpRequest(details) {
         cleaned = cleaned.replace(/\s*\(\d{4}\)/g, '');
         // Remove common suffixes like OST, SoundTrack, Part 1, etc.
         cleaned = cleaned.replace(/\s*-\s*Part\s*\d+/gi, '');
-        cleaned = cleaned.replace(/\s*OST\s*.*/gi, '');
-        cleaned = cleaned.replace(/\s*Soundtrack\s*.*/gi, '');
+        cleaned = cleaned.replace(/\bOST\b.*/gi, '');
+        cleaned = cleaned.replace(/\bSoundtrack\b.*/gi, '');
         return cleaned.trim();
     }
 
@@ -3433,58 +3450,340 @@ function GM_xmlhttpRequest(details) {
                     const data = JSON.parse(response.responseText);
                     if (data.Response === "True") {
                         const rtRating = data.Ratings ? data.Ratings.find(r => r.Source === "Rotten Tomatoes") : null;
-                        console.log('[IMDb Fetcher] Details retrieved for ID: ' + imdbID + ' ("' + data.Title + '") -> Rating: ' + (data.imdbRating || 'N/A') + ', RT: ' + (rtRating ? rtRating.Value : 'N/A'));
+                        const rtValue = rtRating ? rtRating.Value : null;
                         
-                        // Update IMDb rating display if a valid rating exists (and is not N/A)
-                        if (data.imdbRating && data.imdbRating !== "N/A") {
-                            const scoreSpan = document.createElement('span');
-                            scoreSpan.className = 'imdb-stars imdb-score-fade-in';
-                            scoreSpan.innerHTML = `
-                                <svg class="imdb-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
-                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                                </svg>
-                                <span class="imdb-score">${data.imdbRating}</span>
-                            `;
-                            imdbBadgeElement.appendChild(scoreSpan);
-                        }
-
-                        // 2. Parse and display Rotten Tomatoes rating if available (fade it in)
-                        if (rtRating && rtRating.Value) {
-                            const rtBadge = document.createElement('a');
-                            rtBadge.className = 'rt-rating-badge rt-badge-fade-in';
-                            rtBadge.target = '_blank';
-                            rtBadge.rel = 'noopener noreferrer';
-                            // Link RT badge directly to RT search for that drama title
-                            rtBadge.href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(titleQuery)}`;
-                            rtBadge.innerHTML = `
-                                <span class="rt-label">RT</span>
-                                <span class="rt-score-section">
-                                    <svg class="rt-tomato-icon" viewBox="0 0 24 24" fill="#fa320a" width="12" height="12">
-                                        <path d="M12,2C11.5,2 10.9,2.2 10.5,2.6C10,2.1 9.3,1.9 8.6,2.1C8,2.3 7.5,2.8 7.3,3.4C6.9,3.3 6.4,3.4 6.1,3.7C5.7,4 5.5,4.5 5.6,5C3.5,6.3 2,8.7 2,11.5C2,16.2 5.8,20 10.5,20.5C11,20.6 11.5,20.7 12,20.7C12.5,20.7 13,20.6 13.5,20.5C18.2,20 22,16.2 22,11.5C22,8.7 20.5,6.3 18.4,5C18.5,4.5 18.3,4 17.9,3.7C17.6,3.4 17.1,3.3 16.7,3.4C16.5,2.8 16,2.3 15.4,2.1C14.7,1.9 14,2.1 13.5,2.6C13.1,2.2 12.5,2 12,2Z"/>
-                                    </svg>
-                                    <span class="rt-score">${rtRating.Value}</span>
-                                </span>
-                            `;
-                            containerElement.appendChild(rtBadge);
-                        }
+                        // Always route through resolveIncompleteRatings to fetch live RT details (Tomatometer + Popcornmeter)
+                        console.log('[IMDb Fetcher] OMDb details lookup succeeded. Resolving live fallbacks...');
+                        resolveIncompleteRatings(imdbID, data.imdbRating, rtValue, imdbBadgeElement, containerElement, titleQuery, onComplete);
                     } else {
                         console.warn('[IMDb Fetcher] OMDb API returned false response for details: ID: ' + imdbID + ' - ' + (data.Error || 'Unknown Error'));
+                        resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
                     }
                 } catch (e) {
                     console.error('[IMDb Fetcher] Error parsing rating payload for ID: ' + imdbID, e);
-                } finally {
-                    onComplete();
+                    resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
                 }
             },
             onerror: function(err) {
                 console.error('[IMDb Fetcher] Failed to retrieve rating details for ID: ' + imdbID, err);
-                onComplete();
+                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
             },
             ontimeout: function() {
                 console.warn('[IMDb Fetcher] IMDb rating query details timed out for ID: ' + imdbID);
-                onComplete();
+                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
             }
         });
+    }
+
+    const rtCertifiedIcon = `
+        <svg class="rt-tomato-icon" viewBox="0 0 24 24" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+            <path fill="#f5c518" d="M12,2L14,5L17.5,4L17,7.5L20,8L18.5,11L21,13L18,14.5L18,18L14.5,17.5L13,20L10,18.5L7,20L7.5,16.5L4,16L5.5,13L3,11L6,9.5L5.5,6L9,6.5L10.5,3.5L12,2Z"/>
+            <path fill="#fa320a" d="M12,7C10.3,7 9,8.3 9,10C9,11.7 10.3,13 12,13C13.7,13 15,11.7 15,10C15,8.3 13.7,7 12,7Z"/>
+        </svg>
+    `;
+
+    const rtFreshIcon = `
+        <svg class="rt-tomato-icon" viewBox="0 0 24 24" fill="#fa320a" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+            <path d="M12,2C11.5,2 10.9,2.2 10.5,2.6C10,2.1 9.3,1.9 8.6,2.1C8,2.3 7.5,2.8 7.3,3.4C6.9,3.3 6.4,3.4 6.1,3.7C5.7,4 5.5,4.5 5.6,5C3.5,6.3 2,8.7 2,11.5C2,16.2 5.8,20 10.5,20.5C11,20.6 11.5,20.7 12,20.7C12.5,20.7 13,20.6 13.5,20.5C18.2,20 22,16.2 22,11.5C22,8.7 20.5,6.3 18.4,5C18.5,4.5 18.3,4 17.9,3.7C17.6,3.4 17.1,3.3 16.7,3.4C16.5,2.8 16,2.3 15.4,2.1C14.7,1.9 14,2.1 13.5,2.6C13.1,2.2 12.5,2 12,2Z"/>
+        </svg>
+    `;
+
+    const rtRottenIcon = `
+        <svg class="rt-tomato-icon" viewBox="0 0 24 24" fill="#7B9440" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+            <path d="M12,2C11,3 9,4 8,6C6.5,5 5,4.5 4,5.5C3,6.5 4,8.5 5,10C3.5,10.5 2,11.5 2.5,13C3,14.5 5.5,14 7,13.5C6.5,15.5 6.5,17.5 8,18.5C9.5,19.5 11,18 12.5,16.5C13.5,18 15.5,19.5 17,18.5C18.5,17.5 17.5,15.5 17,13.5C18.5,14 21,14.5 21.5,13C22,11.5 20.5,10.5 19,10C20,8.5 21,6.5 20,5.5C19,4.5 17.5,5 16,6C15,4 13,3 12,2Z"/>
+        </svg>
+    `;
+
+    const audFreshIcon = `
+        <svg class="rt-tomato-icon" viewBox="0 0 24 24" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+            <path fill="#f5c518" d="M6,7C5,7 4.5,6 5.5,5C6.5,4 8.5,4.5 9,5.5C9.5,4.5 11.5,4 12.5,5C13.5,6 13,7 13,7 Z M11,7C10.5,6 9.5,5 9,5 C8.5,5 7.5,6 7,7 Z M15,7C14.5,6 13.5,5 13,5 C12.5,5 11.5,6 11,7 Z M18,7C17.5,6 16.5,5 16,5 C15.5,5 14.5,6 14,7 Z"/>
+            <path fill="#fa320a" d="M6,8L7.5,21C7.6,21.5 8,22 8.5,22L15.5,22C16,22 16.4,21.5 16.5,21L18,8 Z"/>
+            <path fill="#ffffff" d="M9.3,8L10.2,22L11.8,22L10.9,8 Z M13.1,8L12.2,22L13.8,22L14.7,8 Z"/>
+        </svg>
+    `;
+
+    const audSpilledIcon = `
+        <svg class="rt-tomato-icon" viewBox="0 0 24 24" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+            <g transform="rotate(-45 12 12)">
+                <path fill="#f5c518" d="M6,7C5,7 4.5,6 5.5,5C6.5,4 8.5,4.5 9,5.5C9.5,4.5 11.5,4 12.5,5C13.5,6 13,7 13,7 Z"/>
+                <path fill="#7B9440" d="M6,8L7.5,21C7.6,21.5 8,22 8.5,22L15.5,22C16,22 16.4,21.5 16.5,21L18,8 Z"/>
+                <path fill="#ffffff" d="M9.3,8L10.2,22L11.8,22L10.9,8 Z M13.1,8L12.2,22L13.8,22L14.7,8 Z"/>
+            </g>
+        </svg>
+    `;
+
+    async function resolveIncompleteRatings(imdbID, existingImdbRating, existingRtValue, imdbBadgeElement, containerElement, titleQuery, onComplete) {
+        let finalImdbRating = (existingImdbRating && existingImdbRating !== "N/A") ? existingImdbRating : null;
+        
+        // RT ratings state
+        let rtCriticsScore = existingRtValue;
+        let rtCriticsCertified = false;
+        let rtCriticsSentiment = 'POSITIVE';
+        let rtAudienceScore = null;
+        let rtAudienceSentiment = 'POSITIVE';
+
+        const promises = [];
+
+        // Fallback 1: IMDb rating is missing, scrape live IMDb title page
+        if (!finalImdbRating) {
+            promises.push(new Promise((resolve) => {
+                const imdbUrl = `https://www.imdb.com/title/${imdbID}/`;
+                console.log('[IMDb Fetcher] Fallback - Scraping live IMDb page: ' + imdbUrl);
+                GM_xmlhttpRequest({
+                    method: "GET",
+                    url: imdbUrl,
+                    timeout: 5000,
+                    onload: function(response) {
+                        try {
+                            const htmlText = response.responseText;
+                            const liveRating = extractIMDbRatingFromHTML(htmlText);
+                            if (liveRating) {
+                                console.log('[IMDb Fetcher] Live IMDb scrape success for ID: ' + imdbID + ' -> Rating: ' + liveRating);
+                                finalImdbRating = liveRating;
+                            }
+                        } catch (e) {
+                            console.error('[IMDb Fetcher] Error parsing scraped IMDb page:', e);
+                        } finally {
+                            resolve();
+                        }
+                    },
+                    onerror: () => resolve(),
+                    ontimeout: () => resolve()
+                });
+            }));
+        }
+
+        // Fallback 2: Query Rotten Tomatoes for BOTH Tomatometer and Popcornmeter
+        promises.push(new Promise((resolve) => {
+            const slug = titleQuery.toLowerCase()
+                                   .replace(/&/g, 'and')
+                                   .replace(/[^a-z0-9\s]/g, '')
+                                   .trim()
+                                   .replace(/\s+/g, '_');
+            
+            const rtTvUrl = `https://www.rottentomatoes.com/tv/${slug}`;
+            console.log('[IMDb Fetcher] Fallback - Querying RT TV show: ' + rtTvUrl);
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: rtTvUrl,
+                timeout: 5000,
+                onload: function(response) {
+                    if (response.status === 200) {
+                        try {
+                            const rtData = parseRTPageHTML(response.responseText);
+                            if (rtData && (rtData.criticsScore || rtData.audienceScore)) {
+                                console.log('[IMDb Fetcher] Live RT TV scrape success for title: ' + titleQuery);
+                                rtCriticsScore = rtData.criticsScore || rtCriticsScore;
+                                rtCriticsCertified = rtData.criticsCertified;
+                                rtCriticsSentiment = rtData.criticsSentiment;
+                                rtAudienceScore = rtData.audienceScore;
+                                rtAudienceSentiment = rtData.audienceSentiment;
+                                resolve();
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('[IMDb Fetcher] Error parsing scraped RT TV page:', e);
+                        }
+                    }
+                    
+                    // If TV page returned 404 or no rating, try Movie page
+                    const rtMovieUrl = `https://www.rottentomatoes.com/m/${slug}`;
+                    console.log('[IMDb Fetcher] Fallback - Querying RT Movie: ' + rtMovieUrl);
+                    GM_xmlhttpRequest({
+                        method: "GET",
+                        url: rtMovieUrl,
+                        timeout: 5000,
+                        onload: function(movieResponse) {
+                            if (movieResponse.status === 200) {
+                                try {
+                                    const rtData = parseRTPageHTML(movieResponse.responseText);
+                                    if (rtData && (rtData.criticsScore || rtData.audienceScore)) {
+                                        console.log('[IMDb Fetcher] Live RT Movie scrape success for title: ' + titleQuery);
+                                        rtCriticsScore = rtData.criticsScore || rtCriticsScore;
+                                        rtCriticsCertified = rtData.criticsCertified;
+                                        rtCriticsSentiment = rtData.criticsSentiment;
+                                        rtAudienceScore = rtData.audienceScore;
+                                        rtAudienceSentiment = rtData.audienceSentiment;
+                                    }
+                                } catch (e) {
+                                    console.error('[IMDb Fetcher] Error parsing scraped RT Movie page:', e);
+                                }
+                            }
+                            resolve();
+                        },
+                        onerror: () => resolve(),
+                        ontimeout: () => resolve()
+                    });
+                },
+                onerror: () => resolve(),
+                ontimeout: () => resolve()
+            });
+        }));
+
+        // Wait for all fallbacks to complete (or fail)
+        await Promise.all(promises);
+
+        // Display whatever ratings we found/resolved
+        displayRatings(finalImdbRating, rtCriticsScore, rtCriticsCertified, rtCriticsSentiment, rtAudienceScore, rtAudienceSentiment, imdbID, imdbBadgeElement, containerElement, titleQuery);
+        onComplete();
+    }
+
+    function extractIMDbRatingFromHTML(htmlText) {
+        try {
+            // Method 1: JSON-LD parse
+            const matches = htmlText.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+            if (matches) {
+                const data = JSON.parse(matches[1]);
+                const objects = Array.isArray(data) ? data : [data];
+                for (const obj of objects) {
+                    if (obj.aggregateRating && obj.aggregateRating.ratingValue) {
+                        return obj.aggregateRating.ratingValue;
+                    }
+                }
+            }
+        } catch (e) {
+            // Silently fall back to regex
+        }
+        
+        // Method 2: Regex pattern matching
+        const ratingMatch = htmlText.match(/"ratingValue"\s*:\s*([\d.]+)/);
+        if (ratingMatch) {
+            return ratingMatch[1];
+        }
+        
+        return null;
+    }
+
+    function parseRTPageHTML(htmlText) {
+        try {
+            // Extract Critics rating value (tomatometer)
+            const criticsScoreMatch = htmlText.match(/slot="critics-score"[^>]*>([\d%]+)<\/rt-text>/);
+            const criticsScore = criticsScoreMatch ? criticsScoreMatch[1] : null;
+
+            // Extract Critics metadata (certified, sentiment)
+            const criticsIconMatch = htmlText.match(/<score-icon-critics\s+([^>]*)/);
+            const criticsAttrs = criticsIconMatch ? criticsIconMatch[1] : '';
+            const criticsCertified = /certified="true"/i.test(criticsAttrs);
+            const criticsSentiment = criticsAttrs.match(/sentiment="([^"]+)"/i)?.[1]?.toUpperCase() || 'POSITIVE';
+
+            // Extract Audience rating value (popcornmeter)
+            const audienceScoreMatch = htmlText.match(/slot="audience-score"[^>]*>([\d%]+)<\/rt-text>/);
+            const audienceScore = audienceScoreMatch ? audienceScoreMatch[1] : null;
+
+            // Extract Audience metadata (sentiment)
+            const audienceIconMatch = htmlText.match(/<score-icon-audience\s+([^>]*)/);
+            const audienceAttrs = audienceIconMatch ? audienceIconMatch[1] : '';
+            const audienceSentiment = audienceAttrs.match(/sentiment="([^"]+)"/i)?.[1]?.toUpperCase() || 'POSITIVE';
+
+            return {
+                criticsScore,
+                criticsCertified,
+                criticsSentiment,
+                audienceScore,
+                audienceSentiment
+            };
+        } catch (e) {
+            console.error('[IMDb Fetcher] Error parsing RT HTML elements:', e);
+        }
+
+        // Fallback to JSON-LD for Critics Tomatometer only
+        try {
+            const matches = htmlText.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+            if (matches) {
+                const data = JSON.parse(matches[1]);
+                const objects = Array.isArray(data) ? data : [data];
+                for (const obj of objects) {
+                    if (obj.aggregateRating) {
+                        if (obj.aggregateRating.name === "Tomatometer" && obj.aggregateRating.ratingValue) {
+                            return {
+                                criticsScore: obj.aggregateRating.ratingValue + '%',
+                                criticsCertified: false,
+                                criticsSentiment: 'POSITIVE',
+                                audienceScore: null,
+                                audienceSentiment: 'POSITIVE'
+                            };
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            // Silently fail
+        }
+
+        return null;
+    }
+
+    function displayRatings(imdbRating, rtCriticsScore, rtCriticsCertified, rtCriticsSentiment, rtAudienceScore, rtAudienceSentiment, imdbID, imdbBadgeElement, containerElement, titleQuery) {
+        // Update the badge link to point directly to the title page
+        imdbBadgeElement.href = `https://www.imdb.com/title/${imdbID}/`;
+        
+        // Display IMDb rating if valid
+        if (imdbRating && imdbRating !== "N/A") {
+            // Check if score is already displayed to prevent duplicates
+            if (!imdbBadgeElement.querySelector('.imdb-stars')) {
+                const scoreSpan = document.createElement('span');
+                scoreSpan.className = 'imdb-stars imdb-score-fade-in';
+                scoreSpan.innerHTML = `
+                    <svg class="imdb-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                    <span class="imdb-score">${imdbRating}</span>
+                `;
+                imdbBadgeElement.appendChild(scoreSpan);
+            }
+        }
+
+        // Display Rotten Tomatoes Critics rating if available
+        if (rtCriticsScore) {
+            if (!containerElement.querySelector('.rt-rating-badge.rt-critics')) {
+                const rtBadge = document.createElement('a');
+                rtBadge.className = 'rt-rating-badge rt-critics rt-badge-fade-in';
+                rtBadge.target = '_blank';
+                rtBadge.rel = 'noopener noreferrer';
+                rtBadge.href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(titleQuery)}`;
+                
+                let iconHtml = rtFreshIcon;
+                if (rtCriticsSentiment === 'NEGATIVE') {
+                    iconHtml = rtRottenIcon;
+                } else if (rtCriticsCertified) {
+                    iconHtml = rtCertifiedIcon;
+                }
+
+                rtBadge.innerHTML = `
+                    <span class="rt-label">RT</span>
+                    <span class="rt-score-section">
+                        ${iconHtml}
+                        <span class="rt-score">${rtCriticsScore}</span>
+                    </span>
+                `;
+                containerElement.appendChild(rtBadge);
+            }
+        }
+
+        // Display Rotten Tomatoes Audience rating if available
+        if (rtAudienceScore) {
+            if (!containerElement.querySelector('.rt-rating-badge.rt-audience')) {
+                const audBadge = document.createElement('a');
+                audBadge.className = 'rt-rating-badge rt-audience rt-badge-fade-in';
+                audBadge.target = '_blank';
+                audBadge.rel = 'noopener noreferrer';
+                audBadge.href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(titleQuery)}`;
+                
+                let iconHtml = audFreshIcon;
+                if (rtAudienceSentiment === 'NEGATIVE') {
+                    iconHtml = audSpilledIcon;
+                }
+
+                audBadge.innerHTML = `
+                    <span class="rt-label rt-audience-label">Aud</span>
+                    <span class="rt-score-section">
+                        ${iconHtml}
+                        <span class="rt-score">${rtAudienceScore}</span>
+                    </span>
+                `;
+                containerElement.appendChild(audBadge);
+            }
+        }
     }
 
     // Start processing
