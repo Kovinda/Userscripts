@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         IMDb Rating Fetcher
 // @namespace    http://tampermonkey.net/
-// @version      2025-03-21.004
+// @version      2025-03-21.007
 // @description  try to take over the world!
 // @author       You
 // @match        https://dramaday.me/**
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=dramaday.me
 // @grant        GM_xmlhttpRequest
+// @connect      omdbapi.com
+// @connect      media-imdb.com
 // @run-at       document-end
 // @updateURL    https://github.com/Kovinda/Userscripts/raw/refs/heads/main/OMDB/OMDB_fetcher.user.js
 // @downloadURL  https://github.com/Kovinda/Userscripts/raw/refs/heads/main/OMDB/OMDB_fetcher.user.js
@@ -138,13 +140,14 @@
         cleaned = cleaned.replace(/\s*\(\d{4}\)/g, '');
         // Remove common suffixes like OST, SoundTrack, Part 1, etc.
         cleaned = cleaned.replace(/\s*-\s*Part\s*\d+/gi, '');
-        cleaned = cleaned.replace(/\s*OST\s*.*/gi, '');
-        cleaned = cleaned.replace(/\s*Soundtrack\s*.*/gi, '');
+        cleaned = cleaned.replace(/\bOST\b.*/gi, '');
+        cleaned = cleaned.replace(/\bSoundtrack\b.*/gi, '');
         return cleaned.trim();
     }
 
     async function processTitlesSequentially() {
         const titleElements = Array.from(document.querySelectorAll('.article__title.entry-title'));
+        console.log('[IMDb Fetcher] Found ' + titleElements.length + ' title elements on the page.');
         if (!titleElements.length) return;
 
         for (const titleElement of titleElements) {
@@ -153,15 +156,17 @@
             
             // Skip empty or extremely short titles (e.g. category fragments or widgets)
             if (!cleanedTitle || cleanedTitle.length < 3) {
+                console.log('[IMDb Fetcher] Skipped title (too short): "' + rawTitle + '"');
                 continue;
             }
             
+            console.log('[IMDb Fetcher] Starting resolution for title: "' + rawTitle + '" (Cleaned: "' + cleanedTitle + '")');
+
             // Create a wrapper container for the rating badges
             const container = document.createElement('span');
             container.className = 'rating-badges-container';
 
             // Create and insert a fallback/loading IMDb badge immediately to prevent layout shift (CLS)
-            // It initially shows ONLY the yellow "IMDb" label without score or N/A
             const badge = document.createElement('a');
             badge.className = 'imdb-rating-badge';
             badge.target = '_blank';
@@ -176,67 +181,122 @@
 
             // Execute the fetch for this specific card and wait for it to complete/timeout
             await new Promise((resolve) => {
-                // Generate path-friendly search term for IMDb's autocomplete API
-                const pathQuery = cleanedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-                if (!pathQuery) {
-                    resolve();
-                    return;
-                }
-                const firstChar = pathQuery.charAt(0);
-                const searchUrl = `https://sg.media-imdb.com/suggests/${firstChar}/${encodeURIComponent(pathQuery)}.json`;
-
+                // Phase 1: Try OMDb Search first
+                const searchUrl = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(cleanedTitle)}`;
+                console.log('[IMDb Fetcher] Phase 1 - Querying OMDb Search for: "' + cleanedTitle + '"');
                 GM_xmlhttpRequest({
                     method: "GET",
                     url: searchUrl,
                     timeout: 5000,
                     onload: function(response) {
                         try {
-                            const text = response.responseText;
-                            const start = text.indexOf('(') + 1;
-                            const end = text.lastIndexOf(')');
-                            if (start > 0 && end > start) {
-                                const data = JSON.parse(text.substring(start, end));
-                                if (data && data.d && data.d.length > 0) {
-                                    // Find the best match from the suggestion results
-                                    let bestMatch = data.d.find(item => item.l.toLowerCase() === cleanedTitle.toLowerCase());
-                                    if (!bestMatch) {
-                                        const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
-                                        bestMatch = data.d.find(item => item.l.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
-                                    }
-                                    
-                                    const chosenItem = bestMatch || data.d[0];
-                                    const imdbID = chosenItem.id;
-                                    
-                                    // Update the link to the direct IMDb page immediately since we have the ID resolved
-                                    badge.href = `https://www.imdb.com/title/${imdbID}/`;
-                                    
-                                    // Fetch detailed rating data from OMDb API by ID
-                                    fetchRatings(imdbID, badge, container, cleanedTitle, resolve);
-                                    return;
+                            const data = JSON.parse(response.responseText);
+                            if (data.Response === "True" && data.Search.length > 0) {
+                                // Find the best match from the search results
+                                let bestMatch = data.Search.find(item => item.Title.toLowerCase() === cleanedTitle.toLowerCase());
+                                if (!bestMatch) {
+                                    // Secondary fallback matching stripping non-alphanumeric chars
+                                    const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
+                                    bestMatch = data.Search.find(item => item.Title.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
                                 }
+                                
+                                const chosenItem = bestMatch || data.Search[0];
+                                console.log('[IMDb Fetcher] OMDb Search success for: "' + cleanedTitle + '" -> Found ID: ' + chosenItem.imdbID + ' ("' + chosenItem.Title + '")');
+                                badge.href = `https://www.imdb.com/title/${chosenItem.imdbID}/`;
+                                fetchRatings(chosenItem.imdbID, badge, container, cleanedTitle, resolve);
+                            } else {
+                                console.log('[IMDb Fetcher] OMDb Search failed/empty for: "' + cleanedTitle + '". Trying IMDb suggestions fallback.');
+                                // Phase 2 Fallback: Try IMDb Suggestion API if OMDb search failed
+                                fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
                             }
-                            console.warn("No IMDb suggestions found for:", cleanedTitle);
-                            resolve();
                         } catch (e) {
-                            console.error("Error parsing IMDb suggestion response:", e);
-                            resolve();
+                            console.error('[IMDb Fetcher] Error parsing IMDb search response for: "' + cleanedTitle + '"', e);
+                            fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
                         }
                     },
-                    onerror: function() {
-                        console.error("Failed to query IMDb suggestions.");
-                        resolve();
+                    onerror: function(err) {
+                        console.error('[IMDb Fetcher] Failed to perform IMDb search query for: "' + cleanedTitle + '"', err);
+                        fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
                     },
                     ontimeout: function() {
-                        console.warn("IMDb suggestions query timed out for:", cleanedTitle);
-                        resolve();
+                        console.warn('[IMDb Fetcher] IMDb search query timed out for: "' + cleanedTitle + '"');
+                        fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
                     }
                 });
             });
         }
     }
 
+    function fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve) {
+        // Generate path-friendly search term for IMDb's autocomplete API
+        const pathQuery = cleanedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+        if (!pathQuery) {
+            console.log('[IMDb Fetcher] Autocomplete fallback skipped (empty pathQuery) for: "' + cleanedTitle + '"');
+            resolve();
+            return;
+        }
+        const firstChar = pathQuery.charAt(0);
+        // Skip suggestion lookup if it doesn't start with standard alphanumeric English character
+        if (!/^[a-z0-9]$/.test(firstChar)) {
+            console.log('[IMDb Fetcher] Autocomplete fallback skipped (starts with non-alphanumeric: "' + firstChar + '") for: "' + cleanedTitle + '"');
+            resolve();
+            return;
+        }
+        
+        const searchUrl = `https://sg.media-imdb.com/suggests/${firstChar}/${encodeURIComponent(pathQuery)}.json`;
+        console.log('[IMDb Fetcher] Phase 2 - Querying IMDb Suggestions fallback for: "' + cleanedTitle + '"');
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: searchUrl,
+            timeout: 5000,
+            onload: function(response) {
+                try {
+                    const text = response.responseText;
+                    const start = text.indexOf('(') + 1;
+                    const end = text.lastIndexOf(')');
+                    if (start > 0 && end > start) {
+                        const data = JSON.parse(text.substring(start, end));
+                        if (data && data.d && data.d.length > 0) {
+                            // Find the best match from the suggestion results
+                            let bestMatch = data.d.find(item => item.l.toLowerCase() === cleanedTitle.toLowerCase());
+                            if (!bestMatch) {
+                                const cleanQuery = cleanedTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim();
+                                bestMatch = data.d.find(item => item.l.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().trim() === cleanQuery);
+                            }
+                            
+                            const chosenItem = bestMatch || data.d[0];
+                            const imdbID = chosenItem.id;
+                            console.log('[IMDb Fetcher] IMDb Autocomplete fallback success for: "' + cleanedTitle + '" -> Found ID: ' + imdbID + ' ("' + chosenItem.l + '")');
+                            
+                            // Update direct page link immediately since we found the ID
+                            badge.href = `https://www.imdb.com/title/${imdbID}/`;
+                            
+                            // Query OMDb rating by resolved ID
+                            fetchRatings(imdbID, badge, container, cleanedTitle, resolve);
+                            return;
+                        }
+                    }
+                    console.warn('[IMDb Fetcher] No IMDb suggestions found in fallback for: "' + cleanedTitle + '"');
+                    resolve();
+                } catch (e) {
+                    console.error('[IMDb Fetcher] Error parsing IMDb suggestion response in fallback for: "' + cleanedTitle + '"', e);
+                    resolve();
+                }
+            },
+            onerror: function(err) {
+                console.error('[IMDb Fetcher] Failed to query IMDb suggestions fallback for: "' + cleanedTitle + '"', err);
+                resolve();
+            },
+            ontimeout: function() {
+                console.warn('[IMDb Fetcher] IMDb suggestions query timed out in fallback for: "' + cleanedTitle + '"');
+                resolve();
+            }
+        });
+    }
+
     function fetchRatings(imdbID, imdbBadgeElement, containerElement, titleQuery, onComplete) {
         const ratingUrl = `https://www.omdbapi.com/?i=${imdbID}&apikey=${API_KEY}`;
+        console.log('[IMDb Fetcher] Phase 3 - Querying OMDb details rating for ID: ' + imdbID);
         GM_xmlhttpRequest({
             method: "GET",
             url: ratingUrl,
@@ -245,6 +305,9 @@
                 try {
                     const data = JSON.parse(response.responseText);
                     if (data.Response === "True") {
+                        const rtRating = data.Ratings ? data.Ratings.find(r => r.Source === "Rotten Tomatoes") : null;
+                        console.log('[IMDb Fetcher] Details retrieved for ID: ' + imdbID + ' ("' + data.Title + '") -> Rating: ' + (data.imdbRating || 'N/A') + ', RT: ' + (rtRating ? rtRating.Value : 'N/A'));
+                        
                         // Update IMDb rating display if a valid rating exists (and is not N/A)
                         if (data.imdbRating && data.imdbRating !== "N/A") {
                             const scoreSpan = document.createElement('span');
@@ -259,7 +322,6 @@
                         }
 
                         // 2. Parse and display Rotten Tomatoes rating if available (fade it in)
-                        const rtRating = data.Ratings ? data.Ratings.find(r => r.Source === "Rotten Tomatoes") : null;
                         if (rtRating && rtRating.Value) {
                             const rtBadge = document.createElement('a');
                             rtBadge.className = 'rt-rating-badge rt-badge-fade-in';
@@ -278,19 +340,21 @@
                             `;
                             containerElement.appendChild(rtBadge);
                         }
+                    } else {
+                        console.warn('[IMDb Fetcher] OMDb API returned false response for details: ID: ' + imdbID + ' - ' + (data.Error || 'Unknown Error'));
                     }
                 } catch (e) {
-                    console.error("Error parsing rating payload:", e);
+                    console.error('[IMDb Fetcher] Error parsing rating payload for ID: ' + imdbID, e);
                 } finally {
                     onComplete();
                 }
             },
-            onerror: function() {
-                console.error("Failed to retrieve rating for IMDb ID:", imdbID);
+            onerror: function(err) {
+                console.error('[IMDb Fetcher] Failed to retrieve rating details for ID: ' + imdbID, err);
                 onComplete();
             },
             ontimeout: function() {
-                console.warn("IMDb rating query timed out for ID:", imdbID);
+                console.warn('[IMDb Fetcher] IMDb rating query details timed out for ID: ' + imdbID);
                 onComplete();
             }
         });
