@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Dramaday & Riviwi Link Bypass
-// @namespace    https://github.com/Kovinda/Userscripts
+// @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  Bypasses the countdown timers and intermediate verification buttons on Riviwi / Dramaday redirect links to take you directly to the destination link.
 // @author       Antigravity
