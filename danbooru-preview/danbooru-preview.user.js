@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Post Preview
 // @namespace    http://tampermonkey.net/
-// @version      1.2.4
+// @version      1.2.5
 // @description  Alt+Click or thumbnail overlay button to preview posts inline with side navigation arrows and thumbnail rail.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -87,13 +87,12 @@
             box-shadow: 0 28px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05);
             overflow: hidden;
             cursor: default;
-            transform: scale(0.94) translateY(12px);
-            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
-            opacity: 0;
             user-select: auto;
+            transform-origin: center center;
+            opacity: 0;
+            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
         }
         .dbpreview-overlay.is-visible .dbpreview-modal {
-            transform: scale(1) translateY(0);
             opacity: 1;
         }
 
@@ -187,12 +186,11 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: blur(2px);
-            transform: scale(1.02);
             opacity: 1;
             transition: opacity 0.3s ease;
             pointer-events: none;
             z-index: 1;
+            display: block;
         }
         .dbpreview-placeholder.is-hidden {
             opacity: 0;
@@ -200,7 +198,7 @@
 
         /* Actual Media (video or image) */
         .dbpreview-media {
-            display: block;
+            display: none;
             width: 100%;
             height: 100%;
             max-width: min(92vw, 1278px);
@@ -213,6 +211,7 @@
             transition: opacity 0.25s ease;
         }
         .dbpreview-media.is-ready {
+            display: block;
             opacity: 1;
         }
 
@@ -810,10 +809,10 @@
         if (isVid) {
             mediaEl = document.createElement('video');
             mediaEl.className = 'dbpreview-media';
-            mediaEl.controls = true;
+            mediaEl.style.display = 'none'; // Keep hidden until loaded to prevent native black box & double spinner
             mediaEl.autoplay = true;
             mediaEl.loop = true;
-            mediaEl.muted = true; // start muted so browser autoplay works
+            mediaEl.muted = true; // muted allows autoplay
             mediaEl.playsInline = true;
             mediaEl.preload = 'auto';
             mediaEl.src = mediaUrl;
@@ -822,6 +821,9 @@
             const onReady = () => {
                 if (readyFired) return;
                 readyFired = true;
+                mediaEl.controls = true; // Show native video controls only once buffered
+                mediaEl.style.display = 'block';
+                mediaEl.offsetHeight; // reflow
                 mediaEl.classList.add('is-ready');
                 spinner.classList.add('is-hidden');
                 if (placeholder) {
@@ -839,10 +841,13 @@
         } else {
             mediaEl = document.createElement('img');
             mediaEl.className = 'dbpreview-media';
+            mediaEl.style.display = 'none';
             mediaEl.alt = `Post #${post.id}`;
             mediaEl.src = mediaUrl;
 
             mediaEl.addEventListener('load', () => {
+                mediaEl.style.display = 'block';
+                mediaEl.offsetHeight; // reflow
                 mediaEl.classList.add('is-ready');
                 spinner.classList.add('is-hidden');
                 if (placeholder) {
@@ -929,15 +934,42 @@
     }
 
     // --- Show / Close Modal ---
-    function openOverlay() {
+    function openOverlay(startRect) {
         if (currentOverlay) return;
         const { overlay, modal } = createModalShell();
         currentOverlay = overlay;
         currentModal = modal;
         document.body.appendChild(overlay);
-        overlay.offsetHeight; // reflow
-        overlay.classList.add('is-visible');
         document.body.style.overflow = 'hidden';
+
+        // Perform FLIP zoom animation from the clicked thumbnail position
+        if (startRect && startRect.width > 0 && startRect.height > 0) {
+            modal.style.transition = 'none';
+            overlay.offsetHeight; // Force layout to compute modal dimensions
+            const targetRect = modal.getBoundingClientRect();
+
+            if (targetRect.width > 0 && targetRect.height > 0) {
+                const scaleX = startRect.width / targetRect.width;
+                const scaleY = startRect.height / targetRect.height;
+                const scale = Math.max(scaleX, scaleY);
+                const deltaX = (startRect.left + startRect.width / 2) - (targetRect.left + targetRect.width / 2);
+                const deltaY = (startRect.top + startRect.height / 2) - (targetRect.top + targetRect.height / 2);
+
+                modal.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
+                modal.style.opacity = '1';
+                modal.offsetHeight; // Force layout
+
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease';
+                    modal.style.transform = 'translate(0, 0) scale(1)';
+                });
+            }
+        } else {
+            modal.style.opacity = '1';
+            modal.style.transform = 'scale(1)';
+        }
+
+        overlay.classList.add('is-visible');
 
         // Initial rail populate
         const rail = modal.querySelector('.dbpreview-rail');
@@ -956,12 +988,17 @@
     }
 
     // --- Main Fetch & Show Handler ---
-    async function fetchAndShowPreview(postId) {
+    async function fetchAndShowPreview(postId, triggerRect) {
         currentPostId = postId;
+
+        const article = document.querySelector(`article.post-preview[data-id="${postId}"]`);
+        const domImg = article?.querySelector('img.post-preview-image') || article?.querySelector('img');
+        const fallbackThumb = domImg?.src || '';
+        const startRect = triggerRect || (domImg ? domImg.getBoundingClientRect() : null);
 
         // Open shell if not already open
         if (!currentOverlay) {
-            openOverlay();
+            openOverlay(startRect);
         }
 
         updateNavButtons(postId);
@@ -970,17 +1007,12 @@
         const mediaWrap = currentModal.querySelector('.dbpreview-media-wrap');
         const spinner = currentModal.querySelector('.dbpreview-spinner');
 
-        // Look for DOM article thumbnail to show instantly as preliminary placeholder
-        const article = document.querySelector(`article.post-preview[data-id="${postId}"]`);
-        const domImg = article?.querySelector('img.post-preview-image') || article?.querySelector('img');
-        const fallbackThumb = domImg?.src || '';
-
         // If we don't have cached data yet, show instant preliminary placeholder
         if (!postDataCache.has(postId) && fallbackThumb) {
             const oldMedia = mediaWrap.querySelectorAll('.dbpreview-media, .dbpreview-placeholder, .dbpreview-error');
             oldMedia.forEach(el => el.remove());
 
-            const domW = domImg.naturalWidth || domImg.width || 360;
+            const domW = domImg.naturalWidth || domImg.width || 480;
             const domH = domImg.naturalHeight || domImg.height || 360;
             const { width: initW, height: initH } = calculateFittedSize(domW, domH);
             mediaWrap.style.width = initW + 'px';
@@ -1036,7 +1068,8 @@
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            fetchAndShowPreview(parseInt(postId, 10));
+            const targetImg = article.querySelector('img.post-preview-image') || article.querySelector('img') || btn;
+            fetchAndShowPreview(parseInt(postId, 10), targetImg.getBoundingClientRect());
         });
 
         btn.addEventListener('mousedown', (e) => {
@@ -1098,7 +1131,8 @@
         e.stopImmediatePropagation();
 
         const postId = parseInt(match[1], 10);
-        fetchAndShowPreview(postId);
+        const targetImg = link.querySelector('img.post-preview-image') || link.querySelector('img') || link;
+        fetchAndShowPreview(postId, targetImg.getBoundingClientRect());
     }, true);
 
     // Keyboard Shortcuts: Escape, Left Arrow, Right Arrow
