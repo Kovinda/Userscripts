@@ -1,0 +1,365 @@
+- generic [ref=f12e2]:
+  - generic [ref=f12e3]:
+    - banner [ref=f12e4]:
+      - generic [ref=f12e6]:
+        - generic:
+          - list [ref=f12e8]:
+            - listitem [ref=f12e9]:
+              - link "Home" [ref=f12e10] [cursor=pointer]:
+                - /url: https://riviwi.com/
+            - listitem [ref=f12e11]:
+              - link "Fitness" [ref=f12e12] [cursor=pointer]:
+                - /url: https://riviwi.com/category/fitness/
+            - listitem [ref=f12e13]:
+              - link "Health" [ref=f12e14] [cursor=pointer]:
+                - /url: https://riviwi.com/category/health/
+            - listitem [ref=f12e15]:
+              - link "Lifestyle" [ref=f12e16] [cursor=pointer]:
+                - /url: https://riviwi.com/category/lifestyle/
+            - listitem [ref=f12e17]:
+              - link "Contact us" [ref=f12e18] [cursor=pointer]:
+                - /url: https://riviwi.com/contact-us/
+            - listitem [ref=f12e19]:
+              - link "About us" [ref=f12e20] [cursor=pointer]:
+                - /url: https://riviwi.com/about-us/
+          - generic [ref=f12e23]:
+            - textbox "Hit enter to search" [ref=f12e24]
+            - generic [ref=f12e25] [cursor=pointer]: 
+      - heading [level=1] [ref=f12e29]:
+        - link "Riviwi" [ref=f12e30] [cursor=pointer]:
+          - /url: https://riviwi.com/
+        - text: .
+    - generic [ref=f12e33]:
+      - heading "Blog Posts" [level=4] [ref=f12e34]
+      - main [ref=f12e35]:
+        - generic [ref=f12e36]:
+          - generic [ref=f12e39]:
+            - text: 0 Seconds
+            - img [ref=f12e378] [cursor=pointer]
+          - article [ref=f12e41]:
+            - generic [ref=f12e43]:
+              - link [ref=f12e46] [cursor=pointer]:
+                - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+              - generic [ref=f12e48]:
+                - heading [level=2] [ref=f12e50]:
+                  - 'link "Seeds and Nuts: Tiny Treasures for Optimal Health" [ref=f12e51] [cursor=pointer]':
+                    - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+                - paragraph [ref=f12e53]:
+                  - text: In the world of nutrition, seeds and nuts stand out as tiny powerhouses packed with essential nutrients that can benefit our health in numerous ways.
+                  - link "…" [ref=f12e54] [cursor=pointer]:
+                    - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+                - generic [ref=f12e55]:
+                  - link "Continue Reading" [ref=f12e57] [cursor=pointer]:
+                    - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+                  - generic [ref=f12e58]: 
+          - article [ref=f12e61]:
+            - generic [ref=f12e63]:
+              - link [ref=f12e66] [cursor=pointer]:
+                - /url: https://riviwi.com/how-important-is-a-workout-routine/
+              - generic [ref=f12e68]:
+                - heading [level=2] [ref=f12e70]:
+                  - link "How important is a workout routine?" [ref=f12e71] [cursor=pointer]:
+                    - /url: https://riviwi.com/how-important-is-a-workout-routine/
+                - paragraph [ref=f12e73]:
+                  - text: Having a workout routine is important for anyone who wants to lose weight, define the body or gain resistance. This type of habit helps prepare
+                  - link "…" [ref=f12e74] [cursor=pointer]:
+                    - /url: https://riviwi.com/how-important-is-a-workout-routine/
+                - generic [ref=f12e75]:
+                  - link "Continue Reading" [ref=f12e77] [cursor=pointer]:
+                    - /url: https://riviwi.com/how-important-is-a-workout-routine/
+                  - generic [ref=f12e78]: 
+          - article [ref=f12e81]:
+            - generic [ref=f12e83]:
+              - link [ref=f12e86] [cursor=pointer]:
+                - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+              - generic [ref=f12e88]:
+                - heading [level=2] [ref=f12e90]:
+                  - link "10 Ways to Moisturize Dry, Damaged Hair" [ref=f12e91] [cursor=pointer]:
+                    - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+                - paragraph [ref=f12e93]:
+                  - text: Dry, damaged hair can be frustrating to deal with, especially if you have other hair care needs like dandruff or oily roots. It’s vital to
+                  - link "…" [ref=f12e94] [cursor=pointer]:
+                    - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+                - generic [ref=f12e95]:
+                  - link "Continue Reading" [ref=f12e97] [cursor=pointer]:
+                    - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+                  - generic [ref=f12e98]: 
+          - article [ref=f12e101]:
+            - generic [ref=f12e103]:
+              - link [ref=f12e106] [cursor=pointer]:
+                - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+              - generic [ref=f12e108]:
+                - heading [level=2] [ref=f12e110]:
+                  - link "7 Tips to Maintain a Healthy Lifestyle" [ref=f12e111] [cursor=pointer]:
+                    - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+                - paragraph [ref=f12e113]:
+                  - text: The day-to-day rush between work, studies, children and personal projects can often throw you off your feet. For this not to happen, it is necessary
+                  - link "…" [ref=f12e114] [cursor=pointer]:
+                    - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+                - generic [ref=f12e115]:
+                  - link "Continue Reading" [ref=f12e117] [cursor=pointer]:
+                    - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+                  - generic [ref=f12e118]: 
+          - article [ref=f12e121]:
+            - generic [ref=f12e123]:
+              - link [ref=f12e126] [cursor=pointer]:
+                - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+              - generic [ref=f12e128]:
+                - heading [level=2] [ref=f12e130]:
+                  - 'link "The Power of Play: Using Video Games to Bring Families Together" [ref=f12e131] [cursor=pointer]':
+                    - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+                - paragraph [ref=f12e133]:
+                  - text: Video games have been a popular form of entertainment for decades, and they have come a long way since their inception. They have evolved into
+                  - link "…" [ref=f12e134] [cursor=pointer]:
+                    - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+                - generic [ref=f12e135]:
+                  - link "Continue Reading" [ref=f12e137] [cursor=pointer]:
+                    - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+                  - generic [ref=f12e138]: 
+          - article [ref=f12e141]:
+            - generic [ref=f12e143]:
+              - link [ref=f12e146] [cursor=pointer]:
+                - /url: https://riviwi.com/6-tips-on-how-to-take-care-of-your-bodys-health/
+              - generic [ref=f12e148]:
+                - heading [level=2] [ref=f12e150]:
+                  - link "6 Tips on How to Take Care of Your Body’s Health" [ref=f12e151] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-tips-on-how-to-take-care-of-your-bodys-health/
+                - paragraph [ref=f12e153]:
+                  - text: People’s health concern has increased greatly after the COVID-19 pandemic. The outbreak of the disease around the world has made the search for a healthier
+                  - link "…" [ref=f12e154] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-tips-on-how-to-take-care-of-your-bodys-health/
+                - generic [ref=f12e155]:
+                  - link "Continue Reading" [ref=f12e157] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-tips-on-how-to-take-care-of-your-bodys-health/
+                  - generic [ref=f12e158]: 
+          - article [ref=f12e161]:
+            - generic [ref=f12e163]:
+              - link [ref=f12e166] [cursor=pointer]:
+                - /url: https://riviwi.com/motivation-to-lose-weight-discover-how-to-overcome-this-challenge/
+              - generic [ref=f12e168]:
+                - heading [level=2] [ref=f12e170]:
+                  - 'link "Motivation to Lose Weight: discover how to overcome this challenge!" [ref=f12e171] [cursor=pointer]':
+                    - /url: https://riviwi.com/motivation-to-lose-weight-discover-how-to-overcome-this-challenge/
+                - paragraph [ref=f12e173]:
+                  - text: Obesity is a problem faced by one in eight adults, according to the World Health Organization. In addition to bodily disorders, external factors also lead
+                  - link "…" [ref=f12e174] [cursor=pointer]:
+                    - /url: https://riviwi.com/motivation-to-lose-weight-discover-how-to-overcome-this-challenge/
+                - generic [ref=f12e175]:
+                  - link "Continue Reading" [ref=f12e177] [cursor=pointer]:
+                    - /url: https://riviwi.com/motivation-to-lose-weight-discover-how-to-overcome-this-challenge/
+                  - generic [ref=f12e178]: 
+          - article [ref=f12e181]:
+            - generic [ref=f12e183]:
+              - link [ref=f12e186] [cursor=pointer]:
+                - /url: https://riviwi.com/mindfulness-a-moment-just-for-you/
+              - generic [ref=f12e188]:
+                - heading [level=2] [ref=f12e190]:
+                  - 'link "Mindfulness: a moment just for you!" [ref=f12e191] [cursor=pointer]':
+                    - /url: https://riviwi.com/mindfulness-a-moment-just-for-you/
+                - paragraph [ref=f12e193]:
+                  - text: Do you know what mindfulness is? In this article you will understand what it is, and why it is so important for your health and
+                  - link "…" [ref=f12e194] [cursor=pointer]:
+                    - /url: https://riviwi.com/mindfulness-a-moment-just-for-you/
+                - generic [ref=f12e195]:
+                  - link "Continue Reading" [ref=f12e197] [cursor=pointer]:
+                    - /url: https://riviwi.com/mindfulness-a-moment-just-for-you/
+                  - generic [ref=f12e198]: 
+          - article [ref=f12e201]:
+            - generic [ref=f12e203]:
+              - link [ref=f12e206] [cursor=pointer]:
+                - /url: https://riviwi.com/6-recommended-exercises-to-start-your-day/
+              - generic [ref=f12e208]:
+                - heading [level=2] [ref=f12e210]:
+                  - link "6 Recommended Exercises to Start Your Day" [ref=f12e211] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-recommended-exercises-to-start-your-day/
+                - paragraph [ref=f12e213]:
+                  - text: Are you one of those who firmly believe in that “God helps those who get up early” or are mornings not your thing at all?
+                  - link "…" [ref=f12e214] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-recommended-exercises-to-start-your-day/
+                - generic [ref=f12e215]:
+                  - link "Continue Reading" [ref=f12e217] [cursor=pointer]:
+                    - /url: https://riviwi.com/6-recommended-exercises-to-start-your-day/
+                  - generic [ref=f12e218]: 
+          - article [ref=f12e221]:
+            - generic [ref=f12e223]:
+              - link [ref=f12e226] [cursor=pointer]:
+                - /url: https://riviwi.com/must-know-these-amazing-benefits-of-chia-seeds/
+              - generic [ref=f12e228]:
+                - heading [level=2] [ref=f12e230]:
+                  - link "Must Know These Amazing Benefits of Chia Seeds" [ref=f12e231] [cursor=pointer]:
+                    - /url: https://riviwi.com/must-know-these-amazing-benefits-of-chia-seeds/
+                - paragraph [ref=f12e233]:
+                  - text: Chia is a variety of sage grown in the central valley of Mexico and found in the form of tiny seeds that often tend to
+                  - link "…" [ref=f12e234] [cursor=pointer]:
+                    - /url: https://riviwi.com/must-know-these-amazing-benefits-of-chia-seeds/
+                - generic [ref=f12e235]:
+                  - link "Continue Reading" [ref=f12e237] [cursor=pointer]:
+                    - /url: https://riviwi.com/must-know-these-amazing-benefits-of-chia-seeds/
+                  - generic [ref=f12e238]: 
+        - navigation "Posts pagination" [ref=f12e241]:
+          - heading "Posts pagination" [level=2] [ref=f12e242]
+          - generic [ref=f12e243]:
+            - generic [ref=f12e244]: "1"
+            - link "2" [ref=f12e245] [cursor=pointer]:
+              - /url: https://riviwi.com/page/2/
+            - link "3" [ref=f12e246] [cursor=pointer]:
+              - /url: https://riviwi.com/page/3/
+            - link "4" [ref=f12e247] [cursor=pointer]:
+              - /url: https://riviwi.com/page/4/
+            - link "" [ref=f12e248] [cursor=pointer]:
+              - /url: https://riviwi.com/page/2/
+      - complementary [ref=f12e250]:
+        - heading "Site Sidebar" [level=3] [ref=f12e251]
+        - complementary [ref=f12e253]:
+          - generic [ref=f12e254]:
+            - heading "Categories" [level=4] [ref=f12e255]
+            - list [ref=f12e256]:
+              - listitem [ref=f12e257]:
+                - link "Fitness" [ref=f12e258] [cursor=pointer]:
+                  - /url: https://riviwi.com/category/fitness/
+              - listitem [ref=f12e259]:
+                - link "Health" [ref=f12e260] [cursor=pointer]:
+                  - /url: https://riviwi.com/category/health/
+              - listitem [ref=f12e261]:
+                - link "Lifestyle" [ref=f12e262] [cursor=pointer]:
+                  - /url: https://riviwi.com/category/lifestyle/
+          - generic [ref=f12e263]:
+            - heading "Recent Posts" [level=4] [ref=f12e264]
+            - list [ref=f12e266]:
+              - listitem [ref=f12e267]:
+                - 'link "Seeds and Nuts: Tiny Treasures for Optimal Health" [ref=f12e269] [cursor=pointer]':
+                  - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+                - generic [ref=f12e270]:
+                  - heading [level=5] [ref=f12e271]:
+                    - 'link "Seeds and Nuts: Tiny Treasures for Optimal Health" [ref=f12e272] [cursor=pointer]':
+                      - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+                  - text: Apr 16, 2024
+              - listitem [ref=f12e273]:
+                - link "How important is a workout routine?" [ref=f12e275] [cursor=pointer]:
+                  - /url: https://riviwi.com/how-important-is-a-workout-routine/
+                - generic [ref=f12e276]:
+                  - heading [level=5] [ref=f12e277]:
+                    - link "How important is a workout routine?" [ref=f12e278] [cursor=pointer]:
+                      - /url: https://riviwi.com/how-important-is-a-workout-routine/
+                  - text: Mar 30, 2024
+              - listitem [ref=f12e279]:
+                - link "10 Ways to Moisturize Dry, Damaged Hair" [ref=f12e281] [cursor=pointer]:
+                  - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+                - generic [ref=f12e282]:
+                  - heading [level=5] [ref=f12e283]:
+                    - link "10 Ways to Moisturize Dry, Damaged Hair" [ref=f12e284] [cursor=pointer]:
+                      - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+                  - text: Nov 03, 2023
+              - listitem [ref=f12e285]:
+                - link "7 Tips to Maintain a Healthy Lifestyle" [ref=f12e287] [cursor=pointer]:
+                  - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+                - generic [ref=f12e288]:
+                  - heading [level=5] [ref=f12e289]:
+                    - link "7 Tips to Maintain a Healthy Lifestyle" [ref=f12e290] [cursor=pointer]:
+                      - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+                  - text: Sep 27, 2023
+              - listitem [ref=f12e291]:
+                - 'link "The Power of Play: Using Video Games to Bring Families Together" [ref=f12e293] [cursor=pointer]':
+                  - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+                - generic [ref=f12e294]:
+                  - heading [level=5] [ref=f12e295]:
+                    - 'link "The Power of Play: Using Video Games to Bring Families Together" [ref=f12e296] [cursor=pointer]':
+                      - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+                  - text: May 06, 2023
+          - generic [ref=f12e297]:
+            - heading "Pages" [level=4] [ref=f12e298]
+            - list [ref=f12e300]:
+              - listitem [ref=f12e301]:
+                - link "About us" [ref=f12e302] [cursor=pointer]:
+                  - /url: https://riviwi.com/about-us/
+              - listitem [ref=f12e303]:
+                - link "Contact us" [ref=f12e304] [cursor=pointer]:
+                  - /url: https://riviwi.com/contact-us/
+              - listitem [ref=f12e305]:
+                - link "Terms of use" [ref=f12e306] [cursor=pointer]:
+                  - /url: https://riviwi.com/terms-of-use/
+              - listitem [ref=f12e307]:
+                - link "Disclaimer" [ref=f12e308] [cursor=pointer]:
+                  - /url: https://riviwi.com/disclaimer/
+              - listitem [ref=f12e309]:
+                - link "Privacy Policy" [ref=f12e310] [cursor=pointer]:
+                  - /url: https://riviwi.com/privacy-policy/
+    - contentinfo [ref=f12e311]:
+      - heading "Site Footer" [level=3] [ref=f12e312]
+      - generic [ref=f12e313]: © 2024 Riviwi.com, All Rights Reserved.
+  - generic [ref=f12e318]:
+    - heading "Sliding Sidebar" [level=3] [ref=f12e319]
+    - generic [ref=f12e320]:
+      - generic [ref=f12e321]:
+        - heading "Categories" [level=4] [ref=f12e322]
+        - list [ref=f12e323]:
+          - listitem [ref=f12e324]:
+            - link "Fitness" [ref=f12e325] [cursor=pointer]:
+              - /url: https://riviwi.com/category/fitness/
+          - listitem [ref=f12e326]:
+            - link "Health" [ref=f12e327] [cursor=pointer]:
+              - /url: https://riviwi.com/category/health/
+          - listitem [ref=f12e328]:
+            - link "Lifestyle" [ref=f12e329] [cursor=pointer]:
+              - /url: https://riviwi.com/category/lifestyle/
+      - generic [ref=f12e330]:
+        - heading "Recent Posts" [level=4] [ref=f12e331]
+        - list [ref=f12e333]:
+          - listitem [ref=f12e334]:
+            - 'link "Seeds and Nuts: Tiny Treasures for Optimal Health" [ref=f12e336] [cursor=pointer]':
+              - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+            - generic [ref=f12e337]:
+              - heading [level=5] [ref=f12e338]:
+                - 'link "Seeds and Nuts: Tiny Treasures for Optimal Health" [ref=f12e339] [cursor=pointer]':
+                  - /url: https://riviwi.com/seeds-and-nuts-tiny-treasures-for-optimal-health/
+              - text: Apr 16, 2024
+          - listitem [ref=f12e340]:
+            - link "How important is a workout routine?" [ref=f12e342] [cursor=pointer]:
+              - /url: https://riviwi.com/how-important-is-a-workout-routine/
+            - generic [ref=f12e343]:
+              - heading [level=5] [ref=f12e344]:
+                - link "How important is a workout routine?" [ref=f12e345] [cursor=pointer]:
+                  - /url: https://riviwi.com/how-important-is-a-workout-routine/
+              - text: Mar 30, 2024
+          - listitem [ref=f12e346]:
+            - link "10 Ways to Moisturize Dry, Damaged Hair" [ref=f12e348] [cursor=pointer]:
+              - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+            - generic [ref=f12e349]:
+              - heading [level=5] [ref=f12e350]:
+                - link "10 Ways to Moisturize Dry, Damaged Hair" [ref=f12e351] [cursor=pointer]:
+                  - /url: https://riviwi.com/10-ways-to-moisturize-dry-damaged-hair/
+              - text: Nov 03, 2023
+          - listitem [ref=f12e352]:
+            - link "7 Tips to Maintain a Healthy Lifestyle" [ref=f12e354] [cursor=pointer]:
+              - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+            - generic [ref=f12e355]:
+              - heading [level=5] [ref=f12e356]:
+                - link "7 Tips to Maintain a Healthy Lifestyle" [ref=f12e357] [cursor=pointer]:
+                  - /url: https://riviwi.com/7-tips-to-maintain-a-healthy-lifestyle/
+              - text: Sep 27, 2023
+          - listitem [ref=f12e358]:
+            - 'link "The Power of Play: Using Video Games to Bring Families Together" [ref=f12e360] [cursor=pointer]':
+              - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+            - generic [ref=f12e361]:
+              - heading [level=5] [ref=f12e362]:
+                - 'link "The Power of Play: Using Video Games to Bring Families Together" [ref=f12e363] [cursor=pointer]':
+                  - /url: https://riviwi.com/the-power-of-play-using-video-games-to-bring-families-together/
+              - text: May 06, 2023
+      - generic [ref=f12e364]:
+        - heading "Pages" [level=4] [ref=f12e365]
+        - list [ref=f12e367]:
+          - listitem [ref=f12e368]:
+            - link "About us" [ref=f12e369] [cursor=pointer]:
+              - /url: https://riviwi.com/about-us/
+          - listitem [ref=f12e370]:
+            - link "Contact us" [ref=f12e371] [cursor=pointer]:
+              - /url: https://riviwi.com/contact-us/
+          - listitem [ref=f12e372]:
+            - link "Terms of use" [ref=f12e373] [cursor=pointer]:
+              - /url: https://riviwi.com/terms-of-use/
+          - listitem [ref=f12e374]:
+            - link "Disclaimer" [ref=f12e375] [cursor=pointer]:
+              - /url: https://riviwi.com/disclaimer/
+          - listitem [ref=f12e376]:
+            - link "Privacy Policy" [ref=f12e377] [cursor=pointer]:
+              - /url: https://riviwi.com/privacy-policy/
