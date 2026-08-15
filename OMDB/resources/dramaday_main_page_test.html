@@ -3145,7 +3145,7 @@ function GM_xmlhttpRequest(details) {
 (function() {
     'use strict';
 
-    // Inject custom styles for the IMDb and Rotten Tomatoes rating badges
+    // Inject custom styles for the IMDb, Rotten Tomatoes, and Rakuten Viki rating badges
     const style = document.createElement('style');
     style.textContent = `
         @keyframes badgeFadeIn {
@@ -3168,7 +3168,7 @@ function GM_xmlhttpRequest(details) {
             vertical-align: middle !important;
         }
 
-        .imdb-rating-badge, .rt-rating-badge {
+        .imdb-rating-badge, .rt-rating-badge, .viki-rating-badge {
             display: inline-flex !important;
             align-items: center !important;
             font-family: 'Lato', sans-serif !important;
@@ -3186,7 +3186,7 @@ function GM_xmlhttpRequest(details) {
             line-height: 1 !important;
         }
 
-        .imdb-rating-badge:hover, .rt-rating-badge:hover {
+        .imdb-rating-badge:hover, .rt-rating-badge:hover, .viki-rating-badge:hover {
             transform: translateY(-1px) !important;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
             color: #ffffff !important;
@@ -3194,6 +3194,10 @@ function GM_xmlhttpRequest(details) {
 
         .imdb-rating-badge:hover {
             border-color: #f5c518 !important;
+        }
+
+        .viki-rating-badge:hover {
+            border-color: #0091ea !important;
         }
 
         .rt-rating-badge.rt-critics:hover {
@@ -3243,7 +3247,19 @@ function GM_xmlhttpRequest(details) {
             text-transform: uppercase !important;
         }
 
-        .imdb-rating-badge .imdb-stars, .rt-rating-badge .rt-score-section {
+        .viki-rating-badge .viki-label {
+            background-color: #0091ea !important;
+            color: #ffffff !important;
+            font-weight: 850 !important;
+            padding: 0 4px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+        }
+
+        .imdb-rating-badge .imdb-stars, .rt-rating-badge .rt-score-section, .viki-rating-badge .viki-stars {
             padding: 0 6px !important;
             height: 100% !important;
             display: flex !important;
@@ -3258,17 +3274,17 @@ function GM_xmlhttpRequest(details) {
             animation: badgeFadeIn 0.4s ease-out forwards !important;
         }
 
-        .rt-badge-fade-in {
+        .rt-badge-fade-in, .viki-score-fade-in {
             animation: badgeFadeIn 0.4s ease-out forwards !important;
         }
 
-        .imdb-rating-badge .imdb-score, .rt-rating-badge .rt-score {
+        .imdb-rating-badge .imdb-score, .rt-rating-badge .rt-score, .viki-rating-badge .viki-score {
             color: #ffffff !important;
             font-weight: 700 !important;
             font-size: 11px !important;
         }
 
-        .imdb-rating-badge .imdb-star-icon, .rt-rating-badge .rt-tomato-icon {
+        .imdb-rating-badge .imdb-star-icon, .rt-rating-badge .rt-tomato-icon, .viki-rating-badge .viki-star-icon {
             display: inline-block !important;
             flex-shrink: 0 !important;
         }
@@ -3277,7 +3293,7 @@ function GM_xmlhttpRequest(details) {
 
     const API_KEY = '73041d6a'; // Replace with your OMDb API key if needed
 
-    const CACHE_KEY = 'imdb_rating_fetcher_cache_v2';
+    const CACHE_KEY = 'imdb_rating_fetcher_cache_v3';
     const CACHE_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
 
     function getCachedData(title) {
@@ -3323,7 +3339,10 @@ function GM_xmlhttpRequest(details) {
             rtCriticsCertified: false,
             rtCriticsSentiment: 'POSITIVE',
             rtAudienceScore: null,
-            rtAudienceSentiment: 'POSITIVE'
+            rtAudienceSentiment: 'POSITIVE',
+            vikiAvailable: false,
+            vikiUrl: null,
+            vikiRating: null
         });
     }
 
@@ -3355,6 +3374,208 @@ function GM_xmlhttpRequest(details) {
         }
     }
 
+    function createVikiBadge(vikiUrl, vikiRating, titleQuery) {
+        const badge = document.createElement('a');
+        badge.className = 'viki-rating-badge viki-score-fade-in';
+        badge.target = '_blank';
+        badge.rel = 'noopener noreferrer';
+        badge.href = vikiUrl;
+        
+        const vikiSvg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 48 48" style="display: block;">
+                <polygon fill="#fff" fill-rule="evenodd" points="33.221,21 15.177,21 16.615,22.503" clip-rule="evenodd"></polygon>
+                <path fill="#fff" fill-rule="evenodd" d="M15.628,18.674c-0.627,0-1.086-0.611-1.086-1.383c0-0.771,0.459-1.383,1.086-1.383s1.071,0.611,1.071,1.383C16.698,18.063,16.256,18.674,15.628,18.674z M16.682,14.854v0.216c-0.337-0.213-0.639-0.336-1.053-0.336c-1.272,0-2.237,1.148-2.237,2.557s0.966,2.556,2.237,2.556c0.414,0,0.716-0.123,1.053-0.336v0.216h1.118v-4.875H16.682z" clip-rule="evenodd"></path>
+                <path fill="#fff" fill-rule="evenodd" d="M25.635,14.854v2.863c0,0.537-0.373,0.991-0.916,0.991c-0.542,0-0.916-0.454-0.916-0.991v-2.863h-1.118v2.863c0,1.175,0.812,2.131,2,2.131c0.549,0,0.95-0.301,0.95-0.301v0.181h1.118v-4.875H25.635z" clip-rule="evenodd"></path>
+                <path fill="#fff" fill-rule="evenodd" d="M36.051,19.728v-2.863c0-0.537,0.373-0.991,0.916-0.991c0.542,0,0.916,0.454,0.916,0.991v2.863H39v-2.863c0-1.175-0.812-2.131-2-2.131c-0.549,0-0.95,0.301-0.95,0.301v-0.18h-1.118v4.874C34.933,19.728,36.051,19.728,36.051,19.728z" clip-rule="evenodd"></path>
+                <path fill="#fff" fill-rule="evenodd" d="M10.169,14.796h0.763c0.525,0,0.954,0.423,0.954,0.943c0,0.522-0.429,0.945-0.954,0.945h-0.763C10.169,16.683,10.169,14.796,10.169,14.796z M10.169,19.728V17.84h0.827l1.431,1.888h1.464l-1.73-2.278c0.539-0.383,0.893-1.006,0.893-1.711c0-1.159-0.951-2.099-2.122-2.099H9v6.089C9,19.728,10.169,19.728,10.169,19.728z" clip-rule="evenodd"></path>
+                <path fill="#fff" fill-rule="evenodd" d="M29.766,18.575c-0.1,0.067-0.227,0.12-0.373,0.12c-0.182,0-0.527-0.138-0.527-0.598V16.01h0.956v-1.156h-0.956v-1.215h-1.118v1.215h-0.591v1.156h0.591v2.103c0,1.088,0.828,1.738,1.662,1.738c0.311,0,0.742-0.101,1.093-0.307L29.766,18.575z" clip-rule="evenodd"></path>
+                <polygon fill="#fff" fill-rule="evenodd" points="21.236,19.728 22.802,19.728 20.578,17.139 22.495,14.854 20.928,14.854 19.588,16.552 19.588,13.237 18.437,13.237 18.437,19.728 19.588,19.728 19.588,17.725" clip-rule="evenodd"></polygon>
+                <path fill="#fff" fill-rule="evenodd" d="M33.324,16.662h-2.013C31.546,15.521,33.106,15.455,33.324,16.662 M32.347,14.73c-1.294,0-2.222,1.125-2.222,2.561c0,1.509,1.165,2.561,2.333,2.561c0.59,0,1.345-0.2,1.98-1.091l-0.988-0.564c-0.763,1.113-2.036,0.548-2.183-0.566l3.219,0.001C34.763,15.882,33.62,14.73,32.347,14.73" clip-rule="evenodd"></path>
+                <polygon fill="#fff" fill-rule="evenodd" points="16.442,25.046 19.607,25.046 15.578,35.895 13.076,35.895 9,25.046 12.181,25.046 14.327,32.151" clip-rule="evenodd"></polygon>
+                <polygon fill="#fff" fill-rule="evenodd" points="23.628,35.895 23.628,25.046 20.618,25.046 20.618,35.895" clip-rule="evenodd"></polygon>
+                <polygon fill="#fff" fill-rule="evenodd" points="29.18,31.906 28.347,32.762 28.347,35.895 25.336,35.895 25.336,25.046 28.347,25.046 28.347,29.172 31.682,25.046 35.079,25.046 31.094,29.904 35.356,35.895 31.897,35.895" clip-rule="evenodd"></polygon>
+                <polygon fill="#fff" fill-rule="evenodd" points="39,35.895 39,25.046 35.989,25.046 35.989,35.895" clip-rule="evenodd"></polygon>
+            </svg>
+        `;
+        badge.innerHTML = `<span class="viki-label">${vikiSvg}</span>`;
+        if (vikiRating) {
+            const scoreSpan = document.createElement('span');
+            scoreSpan.className = 'viki-stars';
+            scoreSpan.innerHTML = `
+                <svg class="viki-star-icon" viewBox="0 0 24 24" fill="#f5c518" width="12" height="12">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                <span class="viki-score">${vikiRating}</span>
+            `;
+            badge.appendChild(scoreSpan);
+        }
+        return badge;
+    }
+
+    function fetchViki(cleanedTitle) {
+        return new Promise((resolve) => {
+            const searchUrl = `https://api.viki.io/v4/search.json?c=${encodeURIComponent(cleanedTitle)}&licensed=0&per_page=7&with_people=true&nocache=true&app=100000a`;
+            console.log('[IMDb Fetcher] [Viki Debug] Starting search query for title: "' + cleanedTitle + '"');
+            console.log('[IMDb Fetcher] [Viki Debug] Query URL: ' + searchUrl);
+            GM_xmlhttpRequest({
+                method: "GET",
+                url: searchUrl,
+                timeout: 5000,
+                onload: function(response) {
+                    try {
+                        console.log('[IMDb Fetcher] [Viki Debug] Search response received. Status: ' + response.status);
+                        const data = JSON.parse(response.responseText);
+                        if (Array.isArray(data) && data.length > 0) {
+                            console.log('[IMDb Fetcher] [Viki Debug] Found ' + data.length + ' search result items. Evaluating match...');
+                            
+                            // Find the best match
+                            let bestMatch = data.find(item => {
+                                console.log('[IMDb Fetcher] [Viki Debug]   Checking item: "' + (item.tt || 'No Title') + '" (ID: ' + item.id + ', Type: ' + item.t + ')');
+                                if (item.t !== "series" && item.t !== "movie") {
+                                    console.log('[IMDb Fetcher] [Viki Debug]     -> Rejected: Type is not series or movie');
+                                    return false;
+                                }
+                                
+                                const title = (item.tt || '').toLowerCase();
+                                const cleanTitleText = title.replace(/[^a-z0-9]/g, '');
+                                const cleanQuery = cleanedTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                
+                                const exactMatch = title === cleanedTitle.toLowerCase();
+                                const cleanExactMatch = cleanTitleText === cleanQuery;
+                                const substringMatch = cleanQuery.length > 3 && (cleanTitleText.includes(cleanQuery) || cleanQuery.includes(cleanTitleText));
+                                
+                                console.log('[IMDb Fetcher] [Viki Debug]     -> Exact match: ' + exactMatch + ' | Clean exact match: ' + cleanExactMatch + ' | Substring match: ' + substringMatch);
+                                
+                                if (exactMatch || cleanExactMatch || substringMatch) {
+                                    console.log('[IMDb Fetcher] [Viki Debug]     -> ACCEPTED MATCH: "' + item.tt + '"');
+                                    return true;
+                                }
+                                return false;
+                            });
+                            
+                            const chosenItem = bestMatch;
+                            if (chosenItem) {
+                                console.log('[IMDb Fetcher] [Viki Debug] Best Viki match selected: "' + chosenItem.tt + '" (ID: ' + chosenItem.id + ')');
+                                const containerId = chosenItem.id;
+                                const webUrlPath = chosenItem.u && chosenItem.u.w ? chosenItem.u.w : `/tv/${containerId}`;
+                                const vikiUrl = `https://www.viki.com${webUrlPath}`;
+
+                                // Query episodes to check availability and get rating
+                                const epUrl = `https://api.viki.io/v4/containers/${containerId}/episodes.json?direction=asc&with_upcoming=true&sort=number&blocked=true&page=1&per_page=10&app=100000a`;
+                                console.log('[IMDb Fetcher] [Viki Debug] Querying episodes. URL: ' + epUrl);
+                                GM_xmlhttpRequest({
+                                    method: "GET",
+                                    url: epUrl,
+                                    timeout: 5000,
+                                    onload: function(epResponse) {
+                                        try {
+                                            console.log('[IMDb Fetcher] [Viki Debug] Episodes response received. Status: ' + epResponse.status);
+                                            const epData = JSON.parse(epResponse.responseText);
+                                            if (epData && Array.isArray(epData.response) && epData.response.length > 0) {
+                                                console.log('[IMDb Fetcher] [Viki Debug] Received ' + epData.response.length + ' episodes. Performing geo-block check...');
+                                                
+                                                // Check if at least one episode is not geo-blocked
+                                                const hasAvailableEpisode = epData.response.some((ep, index) => {
+                                                    const isBlocked = ep.blocking && ep.blocking.geo === true;
+                                                    console.log('[IMDb Fetcher] [Viki Debug]   Episode ' + (index + 1) + ' (ID: ' + ep.id + '): geo-blocked = ' + isBlocked);
+                                                    return !isBlocked;
+                                                });
+                                                
+                                                if (hasAvailableEpisode) {
+                                                    // Extract rating
+                                                    let vikiRating = null;
+                                                    const firstEp = epData.response[0];
+                                                    if (firstEp.container && firstEp.container.review_stats && firstEp.container.review_stats.average_rating) {
+                                                        const rawRating = firstEp.container.review_stats.average_rating;
+                                                        vikiRating = typeof rawRating === 'number' ? rawRating.toFixed(1) : parseFloat(rawRating).toFixed(1);
+                                                        if (isNaN(vikiRating)) vikiRating = null;
+                                                    }
+                                                    console.log('[IMDb Fetcher] [Viki Debug] SUCCESS: Show is available in this region. Rating resolved: ' + vikiRating);
+                                                    resolve({
+                                                        vikiAvailable: true,
+                                                        vikiUrl: vikiUrl,
+                                                        vikiRating: vikiRating
+                                                    });
+                                                    return;
+                                                } else {
+                                                    console.log('[IMDb Fetcher] [Viki Debug] FAIL: All returned episodes are geo-blocked.');
+                                                }
+                                            } else {
+                                                console.log('[IMDb Fetcher] [Viki Debug] FAIL: No episodes found in response.');
+                                            }
+                                        } catch (e) {
+                                            console.error('[IMDb Fetcher] [Viki Debug] Error parsing episodes payload:', e);
+                                        }
+                                        resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                                    },
+                                    onerror: function(err) {
+                                        console.error('[IMDb Fetcher] [Viki Debug] Episodes API request failed:', err);
+                                        resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                                    },
+                                    ontimeout: function() {
+                                        console.warn('[IMDb Fetcher] [Viki Debug] Episodes API request timed out');
+                                        resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                                    }
+                                });
+                                return;
+                            } else {
+                                console.log('[IMDb Fetcher] [Viki Debug] No matching series or movie found in search results.');
+                            }
+                        } else {
+                            console.log('[IMDb Fetcher] [Viki Debug] No search results returned from Viki API.');
+                        }
+                        resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                    } catch (e) {
+                        console.error('[IMDb Fetcher] [Viki Debug] Error parsing Viki search response:', e);
+                        resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                    }
+                },
+                onerror: function(err) {
+                    console.error('[IMDb Fetcher] [Viki Debug] Search API request failed:', err);
+                    resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                },
+                ontimeout: function() {
+                    console.warn('[IMDb Fetcher] [Viki Debug] Search API request timed out');
+                    resolve({ vikiAvailable: false, vikiUrl: null, vikiRating: null });
+                }
+            });
+        });
+    }
+
+    async function handleFailureWithViki(title, imdbBadgeElement, containerElement, vikiPromise, resolve) {
+        const vikiRes = await vikiPromise;
+        
+        // Save cache
+        setCachedData(title, {
+            imdbID: '',
+            imdbRating: null,
+            rtCriticsScore: null,
+            rtCriticsCertified: false,
+            rtCriticsSentiment: 'POSITIVE',
+            rtAudienceScore: null,
+            rtAudienceSentiment: 'POSITIVE',
+            vikiAvailable: vikiRes.vikiAvailable,
+            vikiUrl: vikiRes.vikiUrl,
+            vikiRating: vikiRes.vikiRating
+        });
+
+        // Remove loading IMDb badge since IMDb failed
+        if (imdbBadgeElement && imdbBadgeElement.parentNode) {
+            imdbBadgeElement.parentNode.removeChild(imdbBadgeElement);
+        }
+
+        if (vikiRes.vikiAvailable && vikiRes.vikiUrl) {
+            const vikiBadge = createVikiBadge(vikiRes.vikiUrl, vikiRes.vikiRating, title);
+            containerElement.appendChild(vikiBadge);
+        } else {
+            // Neither IMDb nor Viki are available, remove the container entirely
+            if (containerElement && containerElement.parentNode) {
+                containerElement.parentNode.removeChild(containerElement);
+            }
+        }
+        resolve();
+    }
+
     async function processSingleTitleCard(titleElement) {
         const rawTitle = titleElement.textContent.trim();
         const cleanedTitle = cleanTitle(rawTitle);
@@ -3372,44 +3593,61 @@ function GM_xmlhttpRequest(details) {
         // Check cache first
         const cached = getCachedData(cleanedTitle);
         if (cached) {
-            console.log('[IMDb Fetcher] Cache HIT for: "' + cleanedTitle + '"');
+            console.log('[IMDb Fetcher] Cache HIT for: "' + cleanedTitle + '" (IMDb ID: ' + (cached.imdbID || 'N/A') + ', Viki Available: ' + !!cached.vikiAvailable + ', Viki Rating: ' + (cached.vikiRating || 'N/A') + ')');
             
-            // If it is a cached failure (no IMDb ID), do not render any badges at all
-            if (!cached.imdbID) {
-                console.log('[IMDb Fetcher] Cached title has no IMDb entry. Skipping badge rendering.');
+            // If it is a cached failure (no IMDb ID AND not available on Viki), do not render any badges at all
+            if (!cached.imdbID && !cached.vikiAvailable) {
+                console.log('[IMDb Fetcher] Cached title has no IMDb or Viki entry. Skipping badge rendering.');
                 return;
             }
             
-            // Re-create the main IMDb badge
-            const badge = document.createElement('a');
-            badge.className = 'imdb-rating-badge';
-            badge.target = '_blank';
-            badge.rel = 'noopener noreferrer';
-            badge.href = `https://www.imdb.com/title/${cached.imdbID}/`;
-            badge.innerHTML = `
-                <span class="imdb-label">IMDb</span>
-            `;
-            container.appendChild(badge);
-            titleElement.parentNode.insertBefore(container, titleElement.nextSibling);
+            // Re-create the badges
+            let badgeCreated = false;
+            
+            if (cached.imdbID) {
+                const badge = document.createElement('a');
+                badge.className = 'imdb-rating-badge';
+                badge.target = '_blank';
+                badge.rel = 'noopener noreferrer';
+                badge.href = `https://www.imdb.com/title/${cached.imdbID}/`;
+                badge.innerHTML = `
+                    <span class="imdb-label">IMDb</span>
+                `;
+                container.appendChild(badge);
+                badgeCreated = true;
 
-            // Display cached ratings
-            displayRatings(
-                cached.imdbRating,
-                cached.rtCriticsScore,
-                cached.rtCriticsCertified,
-                cached.rtCriticsSentiment,
-                cached.rtAudienceScore,
-                cached.rtAudienceSentiment,
-                cached.imdbID,
-                badge,
-                container,
-                cleanedTitle
-            );
+                // Display cached ratings
+                displayRatings(
+                    cached.imdbRating,
+                    cached.rtCriticsScore,
+                    cached.rtCriticsCertified,
+                    cached.rtCriticsSentiment,
+                    cached.rtAudienceScore,
+                    cached.rtAudienceSentiment,
+                    cached.imdbID,
+                    badge,
+                    container,
+                    cleanedTitle
+                );
+            }
+
+            if (cached.vikiAvailable && cached.vikiUrl) {
+                const vikiBadge = createVikiBadge(cached.vikiUrl, cached.vikiRating, cleanedTitle);
+                container.appendChild(vikiBadge);
+                badgeCreated = true;
+            }
+
+            if (badgeCreated) {
+                titleElement.parentNode.insertBefore(container, titleElement.nextSibling);
+            }
             return;
         }
 
         // Cache MISS: Proceed with standard resolution
         console.log('[IMDb Fetcher] Cache MISS. Starting resolution for title: "' + rawTitle + '" (Cleaned: "' + cleanedTitle + '")');
+
+        // Start Viki lookup in parallel
+        const vikiPromise = fetchViki(cleanedTitle);
 
         // Create and insert a fallback/loading IMDb badge immediately to prevent layout shift (CLS)
         const badge = document.createElement('a');
@@ -3448,44 +3686,42 @@ function GM_xmlhttpRequest(details) {
                             const chosenItem = bestMatch || data.Search[0];
                             console.log('[IMDb Fetcher] OMDb Search success for: "' + cleanedTitle + '" -> Found ID: ' + chosenItem.imdbID + ' ("' + chosenItem.Title + '")');
                             badge.href = `https://www.imdb.com/title/${chosenItem.imdbID}/`;
-                            fetchRatings(chosenItem.imdbID, badge, container, cleanedTitle, resolve);
+                            fetchRatings(chosenItem.imdbID, badge, container, cleanedTitle, vikiPromise, resolve);
                         } else {
                             console.log('[IMDb Fetcher] OMDb Search failed/empty for: "' + cleanedTitle + '". Trying IMDb suggestions fallback.');
                             // Phase 2 Fallback: Try IMDb Suggestion API if OMDb search failed
-                            fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
+                            fetchIMDbSuggestionFallback(cleanedTitle, badge, container, vikiPromise, resolve);
                         }
                     } catch (e) {
                         console.error('[IMDb Fetcher] Error parsing IMDb search response for: "' + cleanedTitle + '"', e);
-                        fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
+                        fetchIMDbSuggestionFallback(cleanedTitle, badge, container, vikiPromise, resolve);
                     }
                 },
                 onerror: function(err) {
                     console.error('[IMDb Fetcher] Failed to perform IMDb search query for: "' + cleanedTitle + '"', err);
-                    fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
+                    fetchIMDbSuggestionFallback(cleanedTitle, badge, container, vikiPromise, resolve);
                 },
                 ontimeout: function() {
                     console.warn('[IMDb Fetcher] IMDb search query timed out for: "' + cleanedTitle + '"');
-                    fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve);
+                    fetchIMDbSuggestionFallback(cleanedTitle, badge, container, vikiPromise, resolve);
                 }
             });
         });
     }
 
-    function fetchIMDbSuggestionFallback(cleanedTitle, badge, container, resolve) {
+    function fetchIMDbSuggestionFallback(cleanedTitle, badge, container, vikiPromise, resolve) {
         // Generate path-friendly search term for IMDb's autocomplete API
         const pathQuery = cleanedTitle.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
         if (!pathQuery) {
             console.log('[IMDb Fetcher] Autocomplete fallback skipped (empty pathQuery) for: "' + cleanedTitle + '"');
-            cacheFailure(cleanedTitle);
-            resolve();
+            handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
             return;
         }
         const firstChar = pathQuery.charAt(0);
         // Skip suggestion lookup if it doesn't start with standard alphanumeric English character
         if (!/^[a-z0-9]$/.test(firstChar)) {
             console.log('[IMDb Fetcher] Autocomplete fallback skipped (starts with non-alphanumeric: "' + firstChar + '") for: "' + cleanedTitle + '"');
-            cacheFailure(cleanedTitle);
-            resolve();
+            handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
             return;
         }
         
@@ -3518,30 +3754,29 @@ function GM_xmlhttpRequest(details) {
                             badge.href = `https://www.imdb.com/title/${imdbID}/`;
                             
                             // Query OMDb rating by resolved ID
-                            fetchRatings(imdbID, badge, container, cleanedTitle, resolve);
+                            fetchRatings(imdbID, badge, container, cleanedTitle, vikiPromise, resolve);
                             return;
                         }
                     }
                     console.warn('[IMDb Fetcher] No IMDb suggestions found in fallback for: "' + cleanedTitle + '"');
-                    cacheFailure(cleanedTitle);
-                    resolve();
+                    handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
                 } catch (e) {
                     console.error('[IMDb Fetcher] Error parsing IMDb suggestion response in fallback for: "' + cleanedTitle + '"', e);
-                    resolve();
+                    handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
                 }
             },
             onerror: function(err) {
                 console.error('[IMDb Fetcher] Failed to query IMDb suggestions fallback for: "' + cleanedTitle + '"', err);
-                resolve();
+                handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
             },
             ontimeout: function() {
                 console.warn('[IMDb Fetcher] IMDb suggestions query timed out in fallback for: "' + cleanedTitle + '"');
-                resolve();
+                handleFailureWithViki(cleanedTitle, badge, container, vikiPromise, resolve);
             }
         });
     }
 
-    function fetchRatings(imdbID, imdbBadgeElement, containerElement, titleQuery, onComplete) {
+    function fetchRatings(imdbID, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve) {
         const ratingUrl = `https://www.omdbapi.com/?i=${imdbID}&apikey=${API_KEY}`;
         console.log('[IMDb Fetcher] Phase 3 - Querying OMDb details rating for ID: ' + imdbID);
         GM_xmlhttpRequest({
@@ -3557,23 +3792,23 @@ function GM_xmlhttpRequest(details) {
                         
                         // Always route through resolveIncompleteRatings to fetch live RT details (Tomatometer + Popcornmeter)
                         console.log('[IMDb Fetcher] OMDb details lookup succeeded. Resolving live fallbacks...');
-                        resolveIncompleteRatings(imdbID, data.imdbRating, rtValue, imdbBadgeElement, containerElement, titleQuery, onComplete);
+                        resolveIncompleteRatings(imdbID, data.imdbRating, rtValue, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve);
                     } else {
                         console.warn('[IMDb Fetcher] OMDb API returned false response for details: ID: ' + imdbID + ' - ' + (data.Error || 'Unknown Error'));
-                        resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
+                        resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve);
                     }
                 } catch (e) {
                     console.error('[IMDb Fetcher] Error parsing rating payload for ID: ' + imdbID, e);
-                    resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
+                    resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve);
                 }
             },
             onerror: function(err) {
                 console.error('[IMDb Fetcher] Failed to retrieve rating details for ID: ' + imdbID, err);
-                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
+                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve);
             },
             ontimeout: function() {
                 console.warn('[IMDb Fetcher] IMDb rating query details timed out for ID: ' + imdbID);
-                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, onComplete);
+                resolveIncompleteRatings(imdbID, null, null, imdbBadgeElement, containerElement, titleQuery, vikiPromise, resolve);
             }
         });
     }
@@ -3615,7 +3850,7 @@ function GM_xmlhttpRequest(details) {
         </svg>
     `;
 
-    async function resolveIncompleteRatings(imdbID, existingImdbRating, existingRtValue, imdbBadgeElement, containerElement, titleQuery, onComplete) {
+    async function resolveIncompleteRatings(imdbID, existingImdbRating, existingRtValue, imdbBadgeElement, containerElement, titleQuery, vikiPromise, onComplete) {
         let finalImdbRating = (existingImdbRating && existingImdbRating !== "N/A") ? existingImdbRating : null;
         
         // RT ratings state
@@ -3723,8 +3958,11 @@ function GM_xmlhttpRequest(details) {
             });
         }));
 
-        // Wait for all fallbacks to complete (or fail)
-        await Promise.all(promises);
+        // Wait for all fallbacks to complete (or fail) AND wait for Viki to resolve
+        const [, vikiRes] = await Promise.all([
+            Promise.all(promises),
+            vikiPromise
+        ]);
 
         // Save resolved data to cache
         setCachedData(titleQuery, {
@@ -3734,11 +3972,21 @@ function GM_xmlhttpRequest(details) {
             rtCriticsCertified: rtCriticsCertified,
             rtCriticsSentiment: rtCriticsSentiment,
             rtAudienceScore: rtAudienceScore,
-            rtAudienceSentiment: rtAudienceSentiment
+            rtAudienceSentiment: rtAudienceSentiment,
+            vikiAvailable: vikiRes.vikiAvailable,
+            vikiUrl: vikiRes.vikiUrl,
+            vikiRating: vikiRes.vikiRating
         });
 
         // Display whatever ratings we found/resolved
         displayRatings(finalImdbRating, rtCriticsScore, rtCriticsCertified, rtCriticsSentiment, rtAudienceScore, rtAudienceSentiment, imdbID, imdbBadgeElement, containerElement, titleQuery);
+        
+        // Display Viki badge if available
+        if (vikiRes.vikiAvailable && vikiRes.vikiUrl) {
+            const vikiBadge = createVikiBadge(vikiRes.vikiUrl, vikiRes.vikiRating, titleQuery);
+            containerElement.appendChild(vikiBadge);
+        }
+        
         onComplete();
     }
 
