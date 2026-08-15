@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Post Preview
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.2.1
 // @description  Alt+Click or thumbnail overlay button to preview posts inline with side navigation arrows and thumbnail rail.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -375,23 +375,28 @@
         }
 
         /* ===== Thumbnail Preview Button on Page Grid ===== */
-        article.post-preview .post-preview-container {
+        article.post-preview .post-preview-link {
             position: relative !important;
+            display: inline-block !important;
+        }
+        article.post-preview .post-preview-link > picture,
+        article.post-preview .post-preview-link > img {
+            display: block !important;
         }
 
         .dbpreview-thumb-btn {
             position: absolute;
-            z-index: 5;
-            width: 26px;
-            height: 26px;
+            z-index: 10;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: none;
-            border-radius: 6px;
-            background: rgba(0, 0, 0, 0.65);
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 13px;
             line-height: 1;
             cursor: pointer;
             opacity: 0;
@@ -412,7 +417,7 @@
             pointer-events: auto;
         }
         .dbpreview-thumb-btn:hover {
-            background: rgba(110, 142, 251, 0.85);
+            background: rgba(110, 142, 251, 0.9);
             color: #fff;
             transform: scale(1.1);
         }
@@ -913,8 +918,8 @@
         const postId = article.dataset.id;
         if (!postId) return;
 
-        const container = article.querySelector('.post-preview-container');
-        if (!container) return;
+        const link = article.querySelector('a.post-preview-link') || article.querySelector('.post-preview-container') || article;
+        if (!link) return;
 
         const btn = document.createElement('button');
         btn.className = 'dbpreview-thumb-btn';
@@ -933,7 +938,7 @@
             e.stopPropagation();
         });
 
-        container.appendChild(btn);
+        link.appendChild(btn);
     }
 
     function scanAndInjectButtons() {
