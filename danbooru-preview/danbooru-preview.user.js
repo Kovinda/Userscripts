@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru Post Preview
 // @namespace    http://tampermonkey.net/
-// @version      1.2.1
+// @version      1.2.4
 // @description  Alt+Click or thumbnail overlay button to preview posts inline with side navigation arrows and thumbnail rail.
 // @author       You
 // @match        *://danbooru.donmai.us/*
@@ -173,18 +173,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 240px;
-            min-width: 320px;
             background: #0d0d16;
             overflow: hidden;
+            max-width: min(92vw, 1278px);
+            max-height: calc(94vh - 145px);
+            transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1), height 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .dbpreview-media-wrap img,
-        .dbpreview-media-wrap video {
+
+        /* Enlarged Thumbnail Placeholder */
+        .dbpreview-placeholder {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: blur(2px);
+            transform: scale(1.02);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .dbpreview-placeholder.is-hidden {
+            opacity: 0;
+        }
+
+        /* Actual Media (video or image) */
+        .dbpreview-media {
             display: block;
+            width: 100%;
+            height: 100%;
             max-width: min(92vw, 1278px);
             max-height: calc(94vh - 145px);
             object-fit: contain;
             border-radius: 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .dbpreview-media.is-ready {
+            opacity: 1;
         }
 
         /* ===== Loading Spinner ===== */
@@ -195,7 +224,8 @@
             align-items: center;
             justify-content: center;
             pointer-events: none;
-            background: rgba(13, 13, 22, 0.5);
+            background: rgba(13, 13, 22, 0.45);
+            backdrop-filter: blur(2px);
             transition: opacity 0.25s ease;
             z-index: 10;
         }
@@ -676,7 +706,7 @@
         const prevBtn = document.createElement('button');
         prevBtn.className = 'dbpreview-nav-btn dbpreview-prev';
         prevBtn.innerHTML = '‹';
-        prevBtn.title = 'Previous Post (Left Arrow)';
+        prevBtn.title = 'Previous Post (Left Arrow / ‹)';
         prevBtn.type = 'button';
         prevBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -687,7 +717,7 @@
         const nextBtn = document.createElement('button');
         nextBtn.className = 'dbpreview-nav-btn dbpreview-next';
         nextBtn.innerHTML = '›';
-        nextBtn.title = 'Next Post (Right Arrow)';
+        nextBtn.title = 'Next Post (Right Arrow / ›)';
         nextBtn.type = 'button';
         nextBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -728,8 +758,20 @@
         return { overlay, modal };
     }
 
+    /** Calculate target width and height fitting within the viewport preserving aspect ratio */
+    function calculateFittedSize(origW, origH) {
+        if (!origW || !origH) return { width: 480, height: 360 };
+        const maxW = Math.min(window.innerWidth * 0.92, 1278);
+        const maxH = Math.max(200, window.innerHeight * 0.94 - 145);
+        const fitRatio = Math.min(maxW / origW, maxH / origH);
+        return {
+            width: Math.max(160, Math.round(origW * fitRatio)),
+            height: Math.max(160, Math.round(origH * fitRatio))
+        };
+    }
+
     // --- Update Modal Content for a given post ---
-    function fillModalContent(modal, post) {
+    function fillModalContent(modal, post, fallbackThumb) {
         const mode = getQualityMode();
         const mediaUrl = getMediaUrl(post, mode);
         const isVid = isVideo(post);
@@ -738,9 +780,28 @@
         const spinner = modal.querySelector('.dbpreview-spinner');
         const info = modal.querySelector('.dbpreview-info');
 
-        // Reset previous media
-        const existingMedia = mediaWrap.querySelector('img, video, .dbpreview-error');
-        if (existingMedia) existingMedia.remove();
+        // Pre-size mediaWrap to exact aspect ratio and dimensions
+        const rawW = post.image_width || post.media_asset?.image_width || 480;
+        const rawH = post.image_height || post.media_asset?.image_height || 360;
+        const { width: targetW, height: targetH } = calculateFittedSize(rawW, rawH);
+
+        mediaWrap.style.width = targetW + 'px';
+        mediaWrap.style.height = targetH + 'px';
+
+        // Clear existing media and placeholders, keep spinner
+        const oldMedia = mediaWrap.querySelectorAll('.dbpreview-media, .dbpreview-placeholder, .dbpreview-error');
+        oldMedia.forEach(el => el.remove());
+
+        // Thumbnail placeholder for instant visual preview
+        const thumbUrl = post.preview_file_url || fallbackThumb || '';
+        let placeholder = null;
+        if (thumbUrl) {
+            placeholder = document.createElement('img');
+            placeholder.className = 'dbpreview-placeholder';
+            placeholder.src = thumbUrl;
+            placeholder.alt = '';
+            mediaWrap.appendChild(placeholder);
+        }
 
         spinner.classList.remove('is-hidden');
 
@@ -748,24 +809,45 @@
         let mediaEl;
         if (isVid) {
             mediaEl = document.createElement('video');
+            mediaEl.className = 'dbpreview-media';
             mediaEl.controls = true;
             mediaEl.autoplay = true;
             mediaEl.loop = true;
-            mediaEl.muted = true; // muted allows autoplay
+            mediaEl.muted = true; // start muted so browser autoplay works
             mediaEl.playsInline = true;
             mediaEl.preload = 'auto';
             mediaEl.src = mediaUrl;
-            mediaEl.addEventListener('loadeddata', () => spinner.classList.add('is-hidden'), { once: true });
+
+            let readyFired = false;
+            const onReady = () => {
+                if (readyFired) return;
+                readyFired = true;
+                mediaEl.classList.add('is-ready');
+                spinner.classList.add('is-hidden');
+                if (placeholder) {
+                    setTimeout(() => placeholder.classList.add('is-hidden'), 250);
+                }
+                mediaEl.play().catch(() => {});
+            };
+
+            mediaEl.addEventListener('loadeddata', onReady, { once: true });
+            mediaEl.addEventListener('canplay', onReady, { once: true });
             mediaEl.addEventListener('error', () => {
                 spinner.classList.add('is-hidden');
                 mediaWrap.innerHTML = '<div class="dbpreview-error">Failed to load video.</div>';
             }, { once: true });
         } else {
             mediaEl = document.createElement('img');
+            mediaEl.className = 'dbpreview-media';
             mediaEl.alt = `Post #${post.id}`;
             mediaEl.src = mediaUrl;
+
             mediaEl.addEventListener('load', () => {
+                mediaEl.classList.add('is-ready');
                 spinner.classList.add('is-hidden');
+                if (placeholder) {
+                    setTimeout(() => placeholder.classList.add('is-hidden'), 250);
+                }
                 if (mode === 'progressive' && post.large_file_url && post.large_file_url !== post.file_url) {
                     const fullImg = new Image();
                     fullImg.onload = () => {
@@ -831,7 +913,7 @@
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 setQualityMode(qm);
-                fillModalContent(modal, post);
+                fillModalContent(modal, post, fallbackThumb);
             });
             qualGroup.appendChild(btn);
         });
@@ -887,13 +969,36 @@
 
         const mediaWrap = currentModal.querySelector('.dbpreview-media-wrap');
         const spinner = currentModal.querySelector('.dbpreview-spinner');
+
+        // Look for DOM article thumbnail to show instantly as preliminary placeholder
+        const article = document.querySelector(`article.post-preview[data-id="${postId}"]`);
+        const domImg = article?.querySelector('img.post-preview-image') || article?.querySelector('img');
+        const fallbackThumb = domImg?.src || '';
+
+        // If we don't have cached data yet, show instant preliminary placeholder
+        if (!postDataCache.has(postId) && fallbackThumb) {
+            const oldMedia = mediaWrap.querySelectorAll('.dbpreview-media, .dbpreview-placeholder, .dbpreview-error');
+            oldMedia.forEach(el => el.remove());
+
+            const domW = domImg.naturalWidth || domImg.width || 360;
+            const domH = domImg.naturalHeight || domImg.height || 360;
+            const { width: initW, height: initH } = calculateFittedSize(domW, domH);
+            mediaWrap.style.width = initW + 'px';
+            mediaWrap.style.height = initH + 'px';
+
+            const initPlaceholder = document.createElement('img');
+            initPlaceholder.className = 'dbpreview-placeholder';
+            initPlaceholder.src = fallbackThumb;
+            mediaWrap.appendChild(initPlaceholder);
+        }
+
         spinner.classList.remove('is-hidden');
 
         try {
             const post = await fetchPostData(postId);
             if (currentPostId !== postId) return; // Stale request check
 
-            fillModalContent(currentModal, post);
+            fillModalContent(currentModal, post, fallbackThumb);
             updateNavButtons(postId);
             updateRailActive(postId);
         } catch (err) {
@@ -997,10 +1102,11 @@
     }, true);
 
     // Keyboard Shortcuts: Escape, Left Arrow, Right Arrow
-    document.addEventListener('keydown', (e) => {
+    // Intercepted on window during capture phase to completely block background pagination
+    function handleKeyDown(e) {
         if (!currentOverlay) return;
 
-        // Ignore if user is focused on an input/textarea/editable element
+        // Ignore if user is typing in an input/textarea/contentEditable
         const activeTag = document.activeElement?.tagName?.toLowerCase();
         if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
             return;
@@ -1008,15 +1114,33 @@
 
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             closePreview();
         } else if (e.key === 'ArrowLeft') {
             e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             navigateRelative(-1);
         } else if (e.key === 'ArrowRight') {
             e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             navigateRelative(1);
         }
-    });
+    }
 
-    console.log('[Danbooru Preview] Loaded — Alt+Click, 👁 button, Arrow keys, or Thumbnail Rail to preview.');
+    function handleKeyUp(e) {
+        if (!currentOverlay) return;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+
+    console.log('[Danbooru Preview] Loaded — Alt+Click, 👁 button, Left/Right arrow keys, or Thumbnail Rail to preview.');
 })();
