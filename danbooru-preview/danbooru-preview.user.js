@@ -1,10 +1,14 @@
 // ==UserScript==
 // @name         Danbooru Post Preview
-// @namespace    http://tampermonkey.net/
-// @version      1.2.5
-// @description  Alt+Click or thumbnail overlay button to preview posts inline with side navigation arrows and thumbnail rail.
-// @author       You
+// @namespace    https://github.com/Kovinda/Userscripts
+// @version      1.3.1
+// @description  Alt+Click or thumbnail overlay button to preview Danbooru posts inline with FLIP zoom animation, side navigation arrows, scrollable thumbnail filmstrip, and seamless bidirectional infinite pagination.
+// @author       Kovinda
+// @license      MIT
 // @match        *://danbooru.donmai.us/*
+// @icon         https://danbooru.donmai.us/favicon.ico
+// @homepageURL  https://github.com/Kovinda/Userscripts
+// @supportURL   https://github.com/Kovinda/Userscripts/issues
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
@@ -31,6 +35,17 @@
     // Quality modes: 'large' | 'original' | 'progressive'
     const getQualityMode = () => localStorage.getItem(STORAGE_KEY_QUALITY) || 'large';
     const setQualityMode = (mode) => localStorage.setItem(STORAGE_KEY_QUALITY, mode);
+
+    // Video volume persistence & session mute state
+    const STORAGE_KEY_VOLUME = 'dbpreview_video_volume';
+    const getVideoVolume = () => {
+        const v = localStorage.getItem(STORAGE_KEY_VOLUME);
+        return v !== null ? parseFloat(v) : 0.8;
+    };
+    const setVideoVolume = (v) => localStorage.setItem(STORAGE_KEY_VOLUME, v);
+
+    // Active session mute state: resets to true whenever leaving modal, preserved while browsing inside modal
+    let sessionMuted = true;
 
     // --- Tampermonkey Menu Commands ---
     const POSITIONS = [
@@ -78,7 +93,9 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            align-items: center;
             width: fit-content;
+            min-width: 380px;
             max-width: min(94vw, 1280px);
             max-height: 94vh;
             background: #141424;
@@ -88,9 +105,8 @@
             overflow: hidden;
             cursor: default;
             user-select: auto;
-            transform-origin: center center;
             opacity: 0;
-            transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+            transition: opacity 0.2s ease, width 0.22s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .dbpreview-overlay.is-visible .dbpreview-modal {
             opacity: 1;
@@ -174,6 +190,7 @@
             justify-content: center;
             background: #0d0d16;
             overflow: hidden;
+            margin: 0 auto;
             max-width: min(92vw, 1278px);
             max-height: calc(94vh - 145px);
             transition: width 0.22s cubic-bezier(0.22, 1, 0.36, 1), height 0.22s cubic-bezier(0.22, 1, 0.36, 1);
@@ -341,29 +358,68 @@
         }
 
         /* ===== Thumbnail Rail ===== */
-        .dbpreview-rail {
+        .dbpreview-rail-wrap {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.45);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            height: 66px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .dbpreview-rail-track {
+            flex: 1;
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 12px;
-            background: rgba(0, 0, 0, 0.45);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 7px 8px;
             overflow-x: auto;
             overflow-y: hidden;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
             min-height: 66px;
             max-height: 66px;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
         }
-        .dbpreview-rail::-webkit-scrollbar {
+        .dbpreview-rail-track::-webkit-scrollbar {
             height: 5px;
         }
-        .dbpreview-rail::-webkit-scrollbar-thumb {
+        .dbpreview-rail-track::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.2);
             border-radius: 3px;
         }
-        .dbpreview-rail::-webkit-scrollbar-thumb:hover {
+        .dbpreview-rail-track::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.35);
+        }
+        .dbpreview-rail-scroll-btn {
+            width: 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: rgba(0, 0, 0, 0.35);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s, transform 0.1s;
+            padding: 0;
+            z-index: 5;
+            line-height: 1;
+        }
+        .dbpreview-rail-scroll-btn:hover {
+            background: rgba(110, 142, 251, 0.6);
+            color: #fff;
+        }
+        .dbpreview-rail-scroll-btn:active {
+            transform: scale(0.92);
         }
 
         .dbpreview-rail-item {
@@ -377,6 +433,7 @@
             background: #1e1e30;
             transition: opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
             position: relative;
+            flex-shrink: 0;
         }
         .dbpreview-rail-item img {
             width: 100%;
@@ -556,21 +613,196 @@
         return VIDEO_EXTS.has(post.file_ext);
     }
 
+    // --- State for Gallery & Bidirectional Pagination ---
+    let galleryPosts = [];
+    let isFetchingNext = false;
+    let isFetchingPrev = false;
+    let hasMoreNext = true;
+    let hasMorePrev = true;
+
     /** Extract all post items present in the current DOM gallery */
     function getPagePosts() {
         const articles = document.querySelectorAll('article.post-preview[data-id]');
-        const posts = [];
         articles.forEach(art => {
             const id = parseInt(art.dataset.id, 10);
             if (!id || isNaN(id)) return;
-            const img = art.querySelector('img.post-preview-image') || art.querySelector('img');
-            let thumbUrl = '';
-            if (img) {
-                thumbUrl = img.src || img.getAttribute('data-src') || '';
+            if (!galleryPosts.some(p => p.id === id)) {
+                const img = art.querySelector('img.post-preview-image') || art.querySelector('img');
+                const thumbUrl = img?.src || img?.getAttribute('data-src') || '';
+                galleryPosts.push({ id, thumbUrl, element: art });
             }
-            posts.push({ id, thumbUrl, element: art });
         });
-        return posts;
+        return galleryPosts;
+    }
+
+    /** Create a rail item element */
+    function createRailItemElement(postItem) {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'dbpreview-rail-item' + (postItem.id === currentPostId ? ' is-active' : '');
+        itemEl.dataset.postId = postItem.id;
+        itemEl.title = `Post #${postItem.id}`;
+
+        if (postItem.thumbUrl) {
+            const img = document.createElement('img');
+            img.src = postItem.thumbUrl;
+            img.alt = `#${postItem.id}`;
+            img.loading = 'lazy';
+            itemEl.appendChild(img);
+        }
+
+        itemEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentPostId !== postItem.id) {
+                fetchAndShowPreview(postItem.id);
+            }
+        });
+
+        return itemEl;
+    }
+
+    /** Append newly fetched items to the end of the open rail track */
+    function appendRailItems(items) {
+        if (!currentModal || items.length === 0) return;
+        const track = currentModal.querySelector('.dbpreview-rail-track');
+        if (!track) return;
+
+        const fragment = document.createDocumentFragment();
+        items.forEach(postItem => {
+            fragment.appendChild(createRailItemElement(postItem));
+        });
+        track.appendChild(fragment);
+    }
+
+    /** Prepend newly fetched items to the start of the open rail track without jumping scroll */
+    function prependRailItems(items) {
+        if (!currentModal || items.length === 0) return;
+        const track = currentModal.querySelector('.dbpreview-rail-track');
+        if (!track) return;
+
+        const prevScrollWidth = track.scrollWidth;
+        const prevScrollLeft = track.scrollLeft;
+
+        const fragment = document.createDocumentFragment();
+        items.forEach(postItem => {
+            fragment.appendChild(createRailItemElement(postItem));
+        });
+        track.insertBefore(fragment, track.firstChild);
+
+        // Adjust scrollLeft to maintain visual scroll position
+        const widthDiff = track.scrollWidth - prevScrollWidth;
+        track.scrollLeft = prevScrollLeft + widthDiff;
+    }
+
+    // --- Fetch Next Page (Older Posts) from Danbooru API ---
+    async function fetchNextPage() {
+        if (isFetchingNext || !hasMoreNext) return;
+        isFetchingNext = true;
+
+        getPagePosts();
+
+        const validIds = galleryPosts.map(p => p.id).filter(id => typeof id === 'number' && !isNaN(id));
+        if (validIds.length === 0) {
+            isFetchingNext = false;
+            return;
+        }
+        const lowestId = Math.min(...validIds);
+
+        const params = new URLSearchParams(window.location.search);
+        const tags = params.get('tags') || params.get('q') || '';
+        const apiUrl = `/posts.json?tags=${encodeURIComponent(tags)}&page=b${lowestId}&limit=20`;
+
+        try {
+            const resp = await fetch(apiUrl);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const posts = await resp.json();
+
+            if (!Array.isArray(posts) || posts.length === 0) {
+                hasMoreNext = false;
+                return;
+            }
+
+            const newItems = [];
+            posts.forEach(post => {
+                if (post.id && !galleryPosts.some(p => p.id === post.id)) {
+                    postDataCache.set(post.id, post);
+                    const thumbUrl = post.preview_file_url ||
+                                     post.media_asset?.variants?.find(v => v.type === '180x180')?.url ||
+                                     '';
+                    const item = { id: post.id, thumbUrl };
+                    galleryPosts.push(item);
+                    newItems.push(item);
+                }
+            });
+
+            if (newItems.length === 0) {
+                hasMoreNext = false;
+            } else {
+                appendRailItems(newItems);
+                if (currentPostId) updateNavButtons(currentPostId);
+            }
+        } catch (err) {
+            console.warn('[Danbooru Preview] Failed to fetch next posts:', err);
+        } finally {
+            isFetchingNext = false;
+        }
+    }
+
+    // --- Fetch Previous Page (Newer Posts) from Danbooru API ---
+    async function fetchPrevPage() {
+        if (isFetchingPrev || !hasMorePrev) return;
+        isFetchingPrev = true;
+
+        getPagePosts();
+
+        const validIds = galleryPosts.map(p => p.id).filter(id => typeof id === 'number' && !isNaN(id));
+        if (validIds.length === 0) {
+            isFetchingPrev = false;
+            return;
+        }
+        const highestId = Math.max(...validIds);
+
+        const params = new URLSearchParams(window.location.search);
+        const tags = params.get('tags') || params.get('q') || '';
+        const apiUrl = `/posts.json?tags=${encodeURIComponent(tags)}&page=a${highestId}&limit=20`;
+
+        try {
+            const resp = await fetch(apiUrl);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const posts = await resp.json();
+
+            if (!Array.isArray(posts) || posts.length === 0) {
+                hasMorePrev = false;
+                return;
+            }
+
+            // Sort descending by ID so newest posts come first
+            posts.sort((a, b) => b.id - a.id);
+
+            const newItems = [];
+            posts.forEach(post => {
+                if (post.id && !galleryPosts.some(p => p.id === post.id)) {
+                    postDataCache.set(post.id, post);
+                    const thumbUrl = post.preview_file_url ||
+                                     post.media_asset?.variants?.find(v => v.type === '180x180')?.url ||
+                                     '';
+                    const item = { id: post.id, thumbUrl };
+                    newItems.push(item);
+                }
+            });
+
+            if (newItems.length === 0) {
+                hasMorePrev = false;
+            } else {
+                // Prepend to galleryPosts (newItems is descending, so prepend in original order)
+                galleryPosts.unshift(...newItems);
+                prependRailItems(newItems);
+                if (currentPostId) updateNavButtons(currentPostId);
+            }
+        } catch (err) {
+            console.warn('[Danbooru Preview] Failed to fetch previous posts:', err);
+        } finally {
+            isFetchingPrev = false;
+        }
     }
 
     // --- Fetch Post Data with In-Memory Cache ---
@@ -588,57 +820,40 @@
     // --- Relative Navigation (Next / Prev) ---
     function navigateRelative(delta) {
         if (!currentPostId) return;
-        const pagePosts = getPagePosts();
-        if (pagePosts.length === 0) return;
+        const posts = getPagePosts();
+        if (posts.length === 0) return;
 
-        const currentIndex = pagePosts.findIndex(p => p.id === currentPostId);
+        const currentIndex = posts.findIndex(p => p.id === currentPostId);
         if (currentIndex === -1) {
-            // Not found in current page list, load first or last
-            if (delta > 0 && pagePosts.length > 0) {
-                fetchAndShowPreview(pagePosts[0].id);
+            if (delta > 0 && posts.length > 0) {
+                fetchAndShowPreview(posts[0].id);
             }
             return;
         }
 
         const targetIndex = currentIndex + delta;
-        if (targetIndex >= 0 && targetIndex < pagePosts.length) {
-            fetchAndShowPreview(pagePosts[targetIndex].id);
+        if (targetIndex >= 0 && targetIndex < posts.length) {
+            fetchAndShowPreview(posts[targetIndex].id);
+        }
+
+        // Auto-fetch in relevant direction if approaching boundaries
+        if (delta > 0 && currentIndex >= posts.length - 5) {
+            fetchNextPage();
+        } else if (delta < 0 && currentIndex <= 4) {
+            fetchPrevPage();
         }
     }
 
     // --- Update / Render Thumbnail Rail ---
-    function renderThumbnailRail(railEl, targetPostId) {
-        const pagePosts = getPagePosts();
-        railEl.innerHTML = '';
+    function renderThumbnailRail(trackEl, targetPostId) {
+        const posts = getPagePosts();
+        trackEl.innerHTML = '';
 
-        if (pagePosts.length === 0) {
-            railEl.style.display = 'none';
-            return;
-        }
-        railEl.style.display = 'flex';
+        if (posts.length === 0) return;
 
-        pagePosts.forEach(postItem => {
-            const itemEl = document.createElement('div');
-            itemEl.className = 'dbpreview-rail-item' + (postItem.id === targetPostId ? ' is-active' : '');
-            itemEl.dataset.postId = postItem.id;
-            itemEl.title = `Post #${postItem.id}`;
-
-            if (postItem.thumbUrl) {
-                const img = document.createElement('img');
-                img.src = postItem.thumbUrl;
-                img.alt = `#${postItem.id}`;
-                img.loading = 'lazy';
-                itemEl.appendChild(img);
-            }
-
-            itemEl.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (currentPostId !== postItem.id) {
-                    fetchAndShowPreview(postItem.id);
-                }
-            });
-
-            railEl.appendChild(itemEl);
+        posts.forEach(postItem => {
+            const itemEl = createRailItemElement(postItem);
+            trackEl.appendChild(itemEl);
 
             if (postItem.id === targetPostId) {
                 setTimeout(() => {
@@ -651,18 +866,30 @@
     // --- Update Rail Active State in place ---
     function updateRailActive(targetPostId) {
         if (!currentModal) return;
-        const rail = currentModal.querySelector('.dbpreview-rail');
-        if (!rail) return;
+        const track = currentModal.querySelector('.dbpreview-rail-track');
+        if (!track) return;
 
-        const items = rail.querySelectorAll('.dbpreview-rail-item');
+        const items = track.querySelectorAll('.dbpreview-rail-item');
+        let activeEl = null;
         items.forEach(item => {
             const id = parseInt(item.dataset.postId, 10);
             const isActive = id === targetPostId;
             item.classList.toggle('is-active', isActive);
-            if (isActive) {
-                item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            }
+            if (isActive) activeEl = item;
         });
+
+        if (activeEl) {
+            activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
+        // Auto-fetch if active post is near boundaries
+        const posts = getPagePosts();
+        const index = posts.findIndex(p => p.id === targetPostId);
+        if (index >= posts.length - 5) {
+            fetchNextPage();
+        } else if (index <= 4) {
+            fetchPrevPage();
+        }
     }
 
     // --- Update Navigation Buttons in place ---
@@ -672,15 +899,16 @@
         const nextBtn = currentModal.querySelector('.dbpreview-next');
         if (!prevBtn || !nextBtn) return;
 
-        const pagePosts = getPagePosts();
-        const index = pagePosts.findIndex(p => p.id === targetPostId);
+        const posts = getPagePosts();
+        const index = posts.findIndex(p => p.id === targetPostId);
 
         if (index === -1) {
             prevBtn.classList.add('is-disabled');
             nextBtn.classList.add('is-disabled');
         } else {
-            prevBtn.classList.toggle('is-disabled', index <= 0);
-            nextBtn.classList.toggle('is-disabled', index >= pagePosts.length - 1);
+            // Keep buttons enabled if more pages can be fetched in that direction
+            prevBtn.classList.toggle('is-disabled', index <= 0 && !hasMorePrev);
+            nextBtn.classList.toggle('is-disabled', index >= posts.length - 1 && !hasMoreNext);
         }
     }
 
@@ -739,10 +967,54 @@
         info.className = 'dbpreview-info';
         modal.appendChild(info);
 
-        // Thumbnail Rail
-        const rail = document.createElement('div');
-        rail.className = 'dbpreview-rail';
-        modal.appendChild(rail);
+        // Thumbnail Rail Wrapper with Side Scroll Buttons
+        const railWrap = document.createElement('div');
+        railWrap.className = 'dbpreview-rail-wrap';
+
+        const scrollLeftBtn = document.createElement('button');
+        scrollLeftBtn.className = 'dbpreview-rail-scroll-btn dbpreview-rail-prev';
+        scrollLeftBtn.innerHTML = '‹';
+        scrollLeftBtn.title = 'Scroll thumbnails left';
+        scrollLeftBtn.type = 'button';
+        scrollLeftBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            railTrack.scrollBy({ left: -220, behavior: 'smooth' });
+        });
+        railWrap.appendChild(scrollLeftBtn);
+
+        const railTrack = document.createElement('div');
+        railTrack.className = 'dbpreview-rail-track';
+        railWrap.appendChild(railTrack);
+
+        const scrollRightBtn = document.createElement('button');
+        scrollRightBtn.className = 'dbpreview-rail-scroll-btn dbpreview-rail-next';
+        scrollRightBtn.innerHTML = '›';
+        scrollRightBtn.title = 'Scroll thumbnails right';
+        scrollRightBtn.type = 'button';
+        scrollRightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            railTrack.scrollBy({ left: 220, behavior: 'smooth' });
+        });
+        railWrap.appendChild(scrollRightBtn);
+
+        // Horizontal mouse wheel scrolling for rail
+        railTrack.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                railTrack.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        // Auto-fetch when scrolling near either end of the rail
+        railTrack.addEventListener('scroll', () => {
+            if (railTrack.scrollLeft + railTrack.clientWidth >= railTrack.scrollWidth - 180) {
+                fetchNextPage();
+            } else if (railTrack.scrollLeft <= 180) {
+                fetchPrevPage();
+            }
+        });
+
+        modal.appendChild(railWrap);
 
         // Event wiring
         overlay.addEventListener('click', (e) => {
@@ -769,6 +1041,51 @@
         };
     }
 
+    /** Flying thumbnail transition from grid thumbnail to modal center */
+    function animateThumbnailFly(startRect, thumbUrl, targetW, targetH, onComplete) {
+        const controlsH = 104;
+        const totalModalH = targetH + controlsH;
+        const modalW = Math.max(targetW, 460);
+        const targetLeft = Math.round((window.innerWidth - modalW) / 2 + (modalW - targetW) / 2);
+        const targetTop = Math.round(Math.max(12, (window.innerHeight - totalModalH) / 2));
+
+        const flyer = document.createElement('img');
+        flyer.src = thumbUrl;
+        flyer.className = 'dbpreview-flyer';
+        flyer.style.cssText = `
+            position: fixed;
+            top: ${startRect.top}px;
+            left: ${startRect.left}px;
+            width: ${startRect.width}px;
+            height: ${startRect.height}px;
+            object-fit: contain;
+            border-radius: 6px;
+            z-index: 100002;
+            pointer-events: none;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                        left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                        width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                        height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-radius 0.3s ease;
+        `;
+        document.body.appendChild(flyer);
+        flyer.offsetHeight; // force reflow
+
+        requestAnimationFrame(() => {
+            flyer.style.top = targetTop + 'px';
+            flyer.style.left = targetLeft + 'px';
+            flyer.style.width = targetW + 'px';
+            flyer.style.height = targetH + 'px';
+            flyer.style.borderRadius = '14px 14px 0 0';
+        });
+
+        setTimeout(() => {
+            flyer.remove();
+            if (onComplete) onComplete();
+        }, 300);
+    }
+
     // --- Update Modal Content for a given post ---
     function fillModalContent(modal, post, fallbackThumb) {
         const mode = getQualityMode();
@@ -779,11 +1096,13 @@
         const spinner = modal.querySelector('.dbpreview-spinner');
         const info = modal.querySelector('.dbpreview-info');
 
-        // Pre-size mediaWrap to exact aspect ratio and dimensions
+        // Pre-size modal and mediaWrap to exact aspect ratio and dimensions
         const rawW = post.image_width || post.media_asset?.image_width || 480;
         const rawH = post.image_height || post.media_asset?.image_height || 360;
         const { width: targetW, height: targetH } = calculateFittedSize(rawW, rawH);
 
+        const modalW = Math.max(targetW, 460);
+        modal.style.width = modalW + 'px';
         mediaWrap.style.width = targetW + 'px';
         mediaWrap.style.height = targetH + 'px';
 
@@ -812,16 +1131,25 @@
             mediaEl.style.display = 'none'; // Keep hidden until loaded to prevent native black box & double spinner
             mediaEl.autoplay = true;
             mediaEl.loop = true;
-            mediaEl.muted = true; // muted allows autoplay
             mediaEl.playsInline = true;
             mediaEl.preload = 'auto';
             mediaEl.src = mediaUrl;
+
+            // Apply persisted volume and active session mute preference
+            mediaEl.muted = sessionMuted;
+            mediaEl.volume = Math.min(1, Math.max(0, getVideoVolume()));
+
+            // Persist user changes to volume or mute toggle for this session
+            mediaEl.addEventListener('volumechange', () => {
+                setVideoVolume(mediaEl.volume);
+                sessionMuted = mediaEl.muted;
+            });
 
             let readyFired = false;
             const onReady = () => {
                 if (readyFired) return;
                 readyFired = true;
-                mediaEl.controls = true; // Show native video controls only once buffered
+                mediaEl.controls = true; // Show native video controls once buffered
                 mediaEl.style.display = 'block';
                 mediaEl.offsetHeight; // reflow
                 mediaEl.classList.add('is-ready');
@@ -829,7 +1157,14 @@
                 if (placeholder) {
                     setTimeout(() => placeholder.classList.add('is-hidden'), 250);
                 }
-                mediaEl.play().catch(() => {});
+                mediaEl.play().catch(() => {
+                    // If browser blocks unmuted autoplay without recent interaction, fallback to muted
+                    if (!mediaEl.muted) {
+                        mediaEl.muted = true;
+                        sessionMuted = true;
+                        mediaEl.play().catch(() => {});
+                    }
+                });
             };
 
             mediaEl.addEventListener('loadeddata', onReady, { once: true });
@@ -934,7 +1269,7 @@
     }
 
     // --- Show / Close Modal ---
-    function openOverlay(startRect) {
+    function openOverlay(startRect, thumbUrl, targetW, targetH) {
         if (currentOverlay) return;
         const { overlay, modal } = createModalShell();
         currentOverlay = overlay;
@@ -942,38 +1277,21 @@
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
 
-        // Perform FLIP zoom animation from the clicked thumbnail position
-        if (startRect && startRect.width > 0 && startRect.height > 0) {
-            modal.style.transition = 'none';
-            overlay.offsetHeight; // Force layout to compute modal dimensions
-            const targetRect = modal.getBoundingClientRect();
-
-            if (targetRect.width > 0 && targetRect.height > 0) {
-                const scaleX = startRect.width / targetRect.width;
-                const scaleY = startRect.height / targetRect.height;
-                const scale = Math.max(scaleX, scaleY);
-                const deltaX = (startRect.left + startRect.width / 2) - (targetRect.left + targetRect.width / 2);
-                const deltaY = (startRect.top + startRect.height / 2) - (targetRect.top + targetRect.height / 2);
-
-                modal.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
-                modal.style.opacity = '1';
-                modal.offsetHeight; // Force layout
-
-                requestAnimationFrame(() => {
-                    modal.style.transition = 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease';
-                    modal.style.transform = 'translate(0, 0) scale(1)';
-                });
-            }
-        } else {
-            modal.style.opacity = '1';
-            modal.style.transform = 'scale(1)';
-        }
-
         overlay.classList.add('is-visible');
 
+        // Flying thumbnail animation from grid thumbnail to modal
+        if (startRect && thumbUrl && targetW && targetH) {
+            modal.style.opacity = '0';
+            animateThumbnailFly(startRect, thumbUrl, targetW, targetH, () => {
+                modal.style.opacity = '1';
+            });
+        } else {
+            modal.style.opacity = '1';
+        }
+
         // Initial rail populate
-        const rail = modal.querySelector('.dbpreview-rail');
-        renderThumbnailRail(rail, currentPostId);
+        const track = modal.querySelector('.dbpreview-rail-track');
+        if (track) renderThumbnailRail(track, currentPostId);
     }
 
     function closePreview() {
@@ -982,6 +1300,7 @@
         currentOverlay = null;
         currentModal = null;
         currentPostId = null;
+        sessionMuted = true; // Reset mute preference to muted whenever leaving the modal
         ol.classList.remove('is-visible');
         document.body.style.overflow = '';
         setTimeout(() => ol.remove(), 250);
@@ -996,9 +1315,14 @@
         const fallbackThumb = domImg?.src || '';
         const startRect = triggerRect || (domImg ? domImg.getBoundingClientRect() : null);
 
+        const cached = postDataCache.get(postId);
+        const rawW = cached?.image_width || domImg?.naturalWidth || domImg?.width || 480;
+        const rawH = cached?.image_height || domImg?.naturalHeight || domImg?.height || 360;
+        const { width: targetW, height: targetH } = calculateFittedSize(rawW, rawH);
+
         // Open shell if not already open
         if (!currentOverlay) {
-            openOverlay(startRect);
+            openOverlay(startRect, fallbackThumb, targetW, targetH);
         }
 
         updateNavButtons(postId);
@@ -1007,16 +1331,15 @@
         const mediaWrap = currentModal.querySelector('.dbpreview-media-wrap');
         const spinner = currentModal.querySelector('.dbpreview-spinner');
 
-        // If we don't have cached data yet, show instant preliminary placeholder
-        if (!postDataCache.has(postId) && fallbackThumb) {
+        // Pre-size modal and mediaWrap
+        currentModal.style.width = Math.max(targetW, 460) + 'px';
+        mediaWrap.style.width = targetW + 'px';
+        mediaWrap.style.height = targetH + 'px';
+
+        // Set preliminary placeholder
+        if (fallbackThumb) {
             const oldMedia = mediaWrap.querySelectorAll('.dbpreview-media, .dbpreview-placeholder, .dbpreview-error');
             oldMedia.forEach(el => el.remove());
-
-            const domW = domImg.naturalWidth || domImg.width || 480;
-            const domH = domImg.naturalHeight || domImg.height || 360;
-            const { width: initW, height: initH } = calculateFittedSize(domW, domH);
-            mediaWrap.style.width = initW + 'px';
-            mediaWrap.style.height = initH + 'px';
 
             const initPlaceholder = document.createElement('img');
             initPlaceholder.className = 'dbpreview-placeholder';
@@ -1105,8 +1428,8 @@
             scanAndInjectButtons();
             // If modal is open, refresh the thumbnail rail
             if (currentModal && currentPostId) {
-                const rail = currentModal.querySelector('.dbpreview-rail');
-                if (rail) renderThumbnailRail(rail, currentPostId);
+                const track = currentModal.querySelector('.dbpreview-rail-track');
+                if (track) renderThumbnailRail(track, currentPostId);
             }
         }
     });
